@@ -16,10 +16,17 @@
             TruckLocationService.OnTruckLocationUpdated += UpdateMap;
             await TruckLocationService.StartConnection();
         }
+
+        // ✅ Listen for arrival notifications
+        TruckLocationService.OnTruckArrived += async (truckId, message) =>
+        {
+            await JS.InvokeVoidAsync("alert", $"🚛 Truck {truckId} Alert: {message}");
+        };
     }
 
     private async void UpdateMap(int truckId, decimal latitude, decimal longitude)
     {
         await JS.InvokeVoidAsync("updateTruckLocation", truckId, latitude, longitude);
     }
+
 }
