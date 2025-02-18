@@ -190,22 +190,4 @@ public class AuthController : ControllerBase
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-    [HttpGet("test")]
-    [Authorize]
-    public IActionResult TestAuth()
-    {
-        var userEmail = User.Identity?.Name;
-        var userClaims = User.Claims.Select(c => new { c.Type, c.Value });
-        var userRoles = User.Claims
-            .Where(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")
-            .Select(c => c.Value);
-
-        return Ok(new
-        {
-            UserEmail = userEmail,
-            Claims = userClaims,
-            Roles = userRoles,
-            IsAuthenticated = User.Identity?.IsAuthenticated
-        });
-    }
 }
