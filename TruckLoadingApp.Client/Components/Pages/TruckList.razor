@@ -1,0 +1,84 @@
+﻿@page "/trucklist"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using TruckLoadingApp.Client.Models
+@using System.Net.Http.Json
+@using System.Text.Json
+@rendermode InteractiveServer
+
+<PageTitle>Truck List</PageTitle>
+
+<h3>Truck List</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p class="text-danger">@errorMessage</p>
+}
+
+@if (trucks == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Number Plate</th>
+                <th>Load Capacity</th>
+                <th>Preferred Route</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var truck in trucks)
+            {
+                <tr>
+                    <td>@truck.NumberPlate</td>
+                    <td>@truck.LoadCapacityWeight</td>
+                    <td>@truck.PreferredRoute</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private TruckDto[]? trucks;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7021/api/Load/match");
+
+            request.Content = JsonContent.Create(new
+            {
+                originLatitude = 34.0522,
+                originLongitude = -118.2437,
+                destinationLatitude = 37.7749,
+                destinationLongitude = -122.4194,
+                weight = 6000,
+                height = 10,
+                width = 8,
+                length = 20,
+                pickupDate = "2024-01-28T00:00:00",
+                deliveryDate = "2024-02-01T00:00:00"
+            });
+
+            using var response = await Http.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage = $"Error: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}";
+                return;
+            }
+
+            trucks = await response.Content.ReadFromJsonAsync<TruckDto[]>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}
