@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
+using TruckLoadingApp.API.Hubs;
+using TruckLoadingApp.API.Services;
 using TruckLoadingApp.Application.Services;
 using TruckLoadingApp.Domain.Models;
 using TruckLoadingApp.Infrastructure.Data;
@@ -21,6 +23,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         sqlOptions => sqlOptions.MigrationsAssembly("TruckLoadingApp.Infrastructure").UseNetTopologySuite()
     )
 );
+
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = redisConnectionString;
+});
+
+// Add SignalR Service
+builder.Services.AddSignalR();
+
 
 // 🔹 2. Identity Configuration
 builder.Services.AddIdentity<User, IdentityRole>(options =>
@@ -85,15 +97,19 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowBlazorClient", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:5049",  // ✅ Blazor WebAssembly URL (Check Port)
+            "http://localhost:5094",  // ✅ Blazor WebAssembly URL (Check Port)
             "https://localhost:5049", // ✅ HTTPS version
-            "http://localhost:7064"   // ✅ If Blazor is running on this port
+            "http://localhost:7094"   // ✅ If Blazor is running on this port
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials();
     });
 });
+
+
+// ✅ Register TruckLocationService for dependency injection
+builder.Services.AddSingleton<TruckLocationService>();
 
 // 🔹 5. Authorization Configuration
 builder.Services.AddAuthorization();
@@ -192,7 +208,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+// Map SignalR Hub
+app.MapHub<TruckHub>("/truckHub");
 app.UseCors("AllowBlazorClient"); // ✅ Must be BEFORE Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
