@@ -56,40 +56,32 @@
                 var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
                 if (result != null)
                 {
-                    // Store auth information
+                    // Store auth token
                     await JS.InvokeVoidAsync("localStorage.setItem", "authToken", result.Token);
-                    await JS.InvokeVoidAsync("localStorage.setItem", "userInfo",
-                        JsonSerializer.Serialize(result.User));
-                    await JS.InvokeVoidAsync("localStorage.setItem", "tokenExpiration",
-                        result.Expiration.ToString("O"));
+                    await JS.InvokeVoidAsync("localStorage.setItem", "userInfo", JsonSerializer.Serialize(result.User));
+                    await JS.InvokeVoidAsync("localStorage.setItem", "tokenExpiration", result.Expiration.ToString("O"));
 
-                    // Update auth state
+                    // Update authentication state
                     if (AuthenticationStateProvider is CustomAuthStateProvider customAuthStateProvider)
                     {
                         await customAuthStateProvider.NotifyUserAuthentication(result.Token);
                     }
 
-                    Navigation.NavigateTo("/");
+                    Console.WriteLine("Login successful, navigating to home...");
+                    Navigation.NavigateTo("/", forceLoad: true); // Force reload UI
                 }
-            }
-            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                errorMessage = "Invalid email or password.";
             }
             else
             {
-                errorMessage = "Login failed. Please try again.";
+                errorMessage = "Invalid email or password.";
             }
-        }
-        catch (HttpRequestException httpEx)
-        {
-            errorMessage = "Error connecting to server.";
-            Console.WriteLine(httpEx);
         }
         catch (Exception ex)
         {
-            errorMessage = "An unexpected error occurred.";
+            errorMessage = "Error connecting to server.";
             Console.WriteLine(ex);
         }
     }
+
+
 }

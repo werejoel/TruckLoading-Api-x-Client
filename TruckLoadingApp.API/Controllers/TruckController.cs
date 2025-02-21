@@ -55,6 +55,7 @@ namespace TruckLoadingApp.API.Controllers
         /// <response code="200">Truck registration successful, awaiting approval.</response>
         /// <response code="400">Invalid model state.</response>
         /// <response code="401">Unauthorized request.</response>
+        [Authorize(Roles = "Company,Trucker")]
         [HttpPost("register")]
         public async Task<IActionResult> RegisterTruck([FromBody] TruckRegistrationRequest model)
         {
@@ -66,9 +67,9 @@ namespace TruckLoadingApp.API.Controllers
             {
                 // Get the current user's ID
                 var user = await _userManager.GetUserAsync(User); // Get logged in user
-                if (user == null)
+                if (user == null || (user.UserType != UserType.Company && user.UserType != UserType.Trucker))
                 {
-                    return Unauthorized(); // Or handle the case where the user is not found
+                    return Unauthorized("Only truckers and companies can register trucks.");// Or handle the case where the user is not found
                 }
                 var truck = new Truck
                 {

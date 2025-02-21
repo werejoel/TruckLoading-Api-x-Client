@@ -57,16 +57,19 @@ namespace TruckLoadingApp.API.Controllers
         /// <response code="404">Truck type not found.</response>
         [HttpGet("{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetTruckType(int id)
+        public async Task<IActionResult> GetTruckTypes()
         {
-            var truckType = await _context.TruckTypes.FindAsync(id);
+            var truckTypes = await _context.TruckTypes
+                .Where(t => t.IsActive)  // Only return active truck types
+                .Select(t => new { t.Id, t.Name })
+                .ToListAsync();
 
-            if (truckType == null)
+            if (!truckTypes.Any())
             {
-                return NotFound();
+                return NoContent();
             }
 
-            return Ok(truckType);
+            return Ok(truckTypes);
         }
 
         /// <summary>
@@ -119,6 +122,7 @@ namespace TruckLoadingApp.API.Controllers
         /// <returns>An IActionResult indicating the result of the truck type deletion.</returns>
         /// <response code="204">Truck type deleted successfully.</response>
         /// <response code="404">Truck type not found.</response>
+        
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTruckType(int id)
         {
@@ -128,11 +132,13 @@ namespace TruckLoadingApp.API.Controllers
                 return NotFound();
             }
 
-            _context.TruckTypes.Remove(truckType);
+            truckType.IsActive = false;  // ✅ Soft delete
+            truckType.UpdatedDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
         private bool TruckTypeExists(int id)
         {

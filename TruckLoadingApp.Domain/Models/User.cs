@@ -13,26 +13,22 @@ namespace TruckLoadingApp.Domain.Models
     /// </summary>
     public class User : IdentityUser
     {
-        /// <summary>
-        /// Gets or sets the type of user.
-        /// </summary>
         [Required]
         public UserType UserType { get; set; }
 
-        /// <summary>
-        /// Gets or sets the name of the company the user belongs to (nullable).
-        /// </summary>
         [MaxLength(256)]
         public string? CompanyName { get; set; }
 
-        /// <summary>
-        /// Gets or sets the date and time the user was created.
-        /// </summary>
-        public DateTime CreatedDate { get; set; }
+        // New fields for company registration
+        public string? CompanyAddress { get; set; }
+        public string? CompanyRegistrationNumber { get; set; }
+        public string? CompanyContact { get; set; }
 
-        /// <summary>
-        /// Gets or sets the date and time the user was last updated (nullable).
-        /// </summary>
+        public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
+
+        // Navigation property: A company can own multiple trucks
+        public List<Truck>? Trucks { get; set; }
     }
+
 }

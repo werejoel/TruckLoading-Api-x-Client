@@ -26,6 +26,11 @@ namespace TruckLoadingApp.Infrastructure.Data
         {
             base.OnModelCreating(builder);
 
+            builder.Entity<TruckType>()
+    .HasIndex(tt => tt.Name)
+    .IsUnique();  // ✅ Ensures TruckType names are unique
+
+
             // Configure spatial properties for Load
             builder.Entity<Load>()
                 .Property(l => l.OriginLocation)
@@ -155,10 +160,11 @@ namespace TruckLoadingApp.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Truck>()
-                .HasOne(t => t.Owner)
-                .WithMany()
-                .HasForeignKey(t => t.OwnerId)
-                .OnDelete(DeleteBehavior.Restrict);
+    .HasOne(t => t.Owner)
+    .WithMany(u => u.Trucks) // Allow multiple trucks per user
+    .HasForeignKey(t => t.OwnerId)
+    .OnDelete(DeleteBehavior.Restrict);
+
 
             builder.Entity<Load>()
                 .HasOne(l => l.Shipper)

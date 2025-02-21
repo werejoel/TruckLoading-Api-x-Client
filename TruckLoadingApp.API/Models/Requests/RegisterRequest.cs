@@ -10,13 +10,17 @@ namespace TruckLoadingApp.API.Models.Requests
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(100, MinimumLength = 6)]
         public string Password { get; set; } = string.Empty;
 
         [Required]
         public UserType UserType { get; set; }
 
-        [MaxLength(256)]
+        // Company-specific fields
         public string? CompanyName { get; set; }
+        public string? CompanyAddress { get; set; }
+        public string? CompanyRegistrationNumber { get; set; }
+        public string? CompanyContact { get; set; }
     }
+
 }

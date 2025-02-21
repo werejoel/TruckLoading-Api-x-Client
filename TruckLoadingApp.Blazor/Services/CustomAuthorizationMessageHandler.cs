@@ -19,14 +19,17 @@ namespace TruckLoadingApp.Blazor.Services
 
             if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(expiration))
             {
-                DateTime expTime = DateTime.Parse(expiration);
-                if (expTime <= DateTime.UtcNow)
+                DateTime expTime;
+                if (DateTime.TryParse(expiration, out expTime))
                 {
-                    // Token expired, log out user
-                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
-                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "userInfo");
-                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "tokenExpiration");
-                    return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized);
+                    if (expTime <= DateTime.UtcNow)
+                    {
+                        // Token expired, log out user
+                        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
+                        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "userInfo");
+                        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "tokenExpiration");
+                        return new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized);
+                    }
                 }
 
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -34,6 +37,7 @@ namespace TruckLoadingApp.Blazor.Services
 
             return await base.SendAsync(request, cancellationToken);
         }
+
 
     }
 }

@@ -20,14 +20,18 @@ namespace TruckLoadingApp.Blazor.Services
 
             if (string.IsNullOrEmpty(token))
             {
-                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())); // Not authenticated
             }
 
             var claims = ParseClaimsFromJwt(token);
             var identity = new ClaimsIdentity(claims, "jwt");
+            var user = new ClaimsPrincipal(identity);
 
-            return new AuthenticationState(new ClaimsPrincipal(identity));
+            Console.WriteLine($"User Authenticated: {user.Identity.IsAuthenticated} - Roles: {string.Join(",", user.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value))}");
+
+            return new AuthenticationState(user);
         }
+
 
         private IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
         {
@@ -38,11 +42,23 @@ namespace TruckLoadingApp.Blazor.Services
 
             if (keyValuePairs != null)
             {
-                claims.AddRange(keyValuePairs.Select(kvp => new Claim(kvp.Key, kvp.Value.ToString())));
+                foreach (var kvp in keyValuePairs)
+                {
+                    // Handle roles properly (since they use Microsoft's claim format)
+                    if (kvp.Key == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, kvp.Value.ToString() ?? ""));
+                    }
+                    else
+                    {
+                        claims.Add(new Claim(kvp.Key, kvp.Value.ToString() ?? ""));
+                    }
+                }
             }
 
             return claims;
         }
+
 
         private byte[] ParseBase64WithoutPadding(string base64)
         {
