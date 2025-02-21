@@ -1,0 +1,95 @@
+﻿@page "/login"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@using Services
+@using Models
+@using Microsoft.AspNetCore.Components.Authorization
+
+<h3>Login</h3>
+
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>Email:</label>
+        <InputText @bind-Value="loginModel.Email" class="form-control" />
+        <ValidationMessage For="@(() => loginModel.Email)" />
+    </div>
+    <div class="form-group mt-3">
+        <label>Password:</label>
+        <InputText @bind-Value="loginModel.Password" class="form-control" type="password" />
+        <ValidationMessage For="@(() => loginModel.Password)" />
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Login</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3">@errorMessage</div>
+}
+
+@code {
+    private LoginModel loginModel = new();
+    private string errorMessage = string.Empty;
+
+    private class LoginModel
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; } = string.Empty;
+    }
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/auth/login", loginModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                if (result != null)
+                {
+                    // Store auth information
+                    await JS.InvokeVoidAsync("localStorage.setItem", "authToken", result.Token);
+                    await JS.InvokeVoidAsync("localStorage.setItem", "userInfo",
+                        JsonSerializer.Serialize(result.User));
+                    await JS.InvokeVoidAsync("localStorage.setItem", "tokenExpiration",
+                        result.Expiration.ToString("O"));
+
+                    // Update auth state
+                    if (AuthenticationStateProvider is CustomAuthStateProvider customAuthStateProvider)
+                    {
+                        await customAuthStateProvider.NotifyUserAuthentication(result.Token);
+                    }
+
+                    Navigation.NavigateTo("/");
+                }
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                errorMessage = "Invalid email or password.";
+            }
+            else
+            {
+                errorMessage = "Login failed. Please try again.";
+            }
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = "Error connecting to server.";
+            Console.WriteLine(httpEx);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An unexpected error occurred.";
+            Console.WriteLine(ex);
+        }
+    }
+}
