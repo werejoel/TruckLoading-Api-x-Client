@@ -8,15 +8,22 @@ using System.Text;
 using TruckLoadingApp.API.Hubs;
 using TruckLoadingApp.API.Services;
 using TruckLoadingApp.Application.Services;
+using TruckLoadingApp.Application.Services.Interfaces;
+using TruckLoadingApp.Domain.Enums;
 using TruckLoadingApp.Domain.Models;
 using TruckLoadingApp.Infrastructure.Data;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims; // Add logging namespace
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure services
 builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
 {
     options.SuppressModelStateInvalidFilter = true; // Prevents automatic 400 responses
 });
-// 🔹 1. Database Configuration
+
+// Database Configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -24,6 +31,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     )
 );
 
+// Redis Configuration
 var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -33,8 +41,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 // Add SignalR Service
 builder.Services.AddSignalR();
 
-
-// 🔹 2. Identity Configuration
+// Identity Configuration
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -47,7 +54,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// 🔹 3. JWT Authentication Configuration
+// JWT Authentication Configuration
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("JWT Key is missing"));
 
@@ -58,48 +65,46 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false; // ✅ Set to true in production
+    options.RequireHttpsMetadata = false; // Set to true in production
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = true, // ✅ Ensure issuer validation is enabled
+        ValidateIssuer = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidateAudience = true, // ✅ Ensure audience validation is enabled
+        ValidateAudience = true,
         ValidAudience = builder.Configuration["Jwt:Audience"],
         RequireExpirationTime = true,
         ValidateLifetime = true,
-        RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-
-
+        RoleClaimType = ClaimTypes.Role
     };
-options.Events = new JwtBearerEvents
-{
-    OnAuthenticationFailed = context =>
+    options.Events = new JwtBearerEvents
     {
-        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-        logger.LogError($"Authentication failed: {context.Exception}");
-        return Task.CompletedTask;
-    },
-    OnTokenValidated = context =>
-    {
-        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-        logger.LogInformation("Token validated successfully");
-        return Task.CompletedTask;
-    }
-};
+        OnAuthenticationFailed = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogError($"Authentication failed: {context.Exception}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogInformation("Token validated successfully");
+            return Task.CompletedTask;
+        }
+    };
 });
 
-// 🔹 4. CORS Configuration (Allow frontend requests)
+// CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorClient", policy =>
     {
         policy.WithOrigins(
-            "http://localhost:5094",  // ✅ Blazor WebAssembly URL (Check Port)
-            "https://localhost:5049", // ✅ HTTPS version
-            "http://localhost:7094"   // ✅ If Blazor is running on this port
+            "http://localhost:5094",
+            "https://localhost:5049",
+            "http://localhost:7094"
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -107,11 +112,20 @@ builder.Services.AddCors(options =>
     });
 });
 
-
-// ✅ Register TruckLocationService for dependency injection
+// Register Services
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IPricingService, PricingService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSingleton<TruckLocationService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddScoped<IUserLocationService, UserLocationService>();
+builder.Services.AddScoped<ITruckService, TruckService>(); 
+builder.Services.AddScoped<IDriverService, DriverService>();
+builder.Services.AddScoped<IUserLocationService, UserLocationService>();
+builder.Services.AddScoped<ILoadService, LoadService>();
 
-// 🔹 5. Authorization Configuration
+// Authorization Configuration
 builder.Services.AddAuthorization();
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -129,19 +143,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-// 🔹 6. Register Services
-builder.Services.AddScoped<IMatchService, MatchService>(); // ✅ Custom Service Injection
-
-// 🔹 7. Controllers and Swagger
-builder.Services.AddControllers();
+// Swagger Configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    // Locate the XML file being generated by ASP.NET
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-
-    // Include XML comments in Swagger documentation
     c.IncludeXmlComments(xmlPath);
 
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -178,12 +185,15 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage(); // ✅ Show detailed error messages in Development mode
+    app.UseDeveloperExceptionPage();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
-// 🔹 8. Seed Database on Startup
+// Seed Database on Startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -202,22 +212,16 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// 🔹 9. Middleware Configuration
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-// Map SignalR Hub
-app.MapHub<TruckHub>("/truckHub");
-app.UseCors("AllowBlazorClient"); // ✅ Must be BEFORE Authentication & Authorization
+// Middleware Configuration
+app.UseCors("AllowBlazorClient");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<TruckHub>("/truckHub");
 
 await app.RunAsync();
 
-// 🔟 Database Seeder Function
+// Database Seeder Function
 async Task SeedDatabaseAsync(ApplicationDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
 {
     await context.Database.MigrateAsync();

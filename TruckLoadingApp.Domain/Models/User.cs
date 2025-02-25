@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TruckLoadingApp.Domain.Enums;
 
 namespace TruckLoadingApp.Domain.Models
 {
@@ -16,18 +17,22 @@ namespace TruckLoadingApp.Domain.Models
         [Required]
         public UserType UserType { get; set; }
 
-        [MaxLength(256)]
-        public string? CompanyName { get; set; }
+        // Truck Owner Type (Only for Truckers)
+        public TruckOwnerType? TruckOwnerType { get; set; }
 
-        // New fields for company registration
+        // Company-specific fields (Only for Company users)
+        public string? CompanyName { get; set; }
         public string? CompanyAddress { get; set; }
         public string? CompanyRegistrationNumber { get; set; }
         public string? CompanyContact { get; set; }
 
-        public DateTime CreatedDate { get; set; }
-        public DateTime? UpdatedDate { get; set; }
+        [Required]
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-        // Navigation property: A company can own multiple trucks
+        // One-to-One Relationship with ContactDetails
+        public ContactDetails? ContactDetails { get; set; }
+
+        // One-to-Many Relationship: A Trucker or Company can have multiple Trucks
         public List<Truck>? Trucks { get; set; }
     }
 
