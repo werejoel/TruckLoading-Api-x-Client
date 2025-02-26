@@ -9,9 +9,11 @@ using TruckLoadingApp.API.Models.Requests;
 
 using TruckLoadingApp.Domain.Models;
 using Microsoft.IdentityModel.Tokens;
+using Asp.Versioning;
 namespace TruckLoadingApp.API.Controllers
 {
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {

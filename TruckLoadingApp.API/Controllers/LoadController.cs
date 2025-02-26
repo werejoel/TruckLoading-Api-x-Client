@@ -9,10 +9,12 @@ using TruckLoadingApp.API.Models.Requests;
 using TruckLoadingApp.Application.Services.Interfaces;
 using TruckLoadingApp.Domain.Models;
 using TruckLoadingApp.Domain.Enums;
+using Asp.Versioning;
 
 namespace TruckLoadingApp.API.Controllers
 {
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [Authorize(Roles = "Shipper")] // Ensure only Shippers can access this controller
     public class LoadController : ControllerBase

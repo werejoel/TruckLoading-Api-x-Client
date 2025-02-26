@@ -5,15 +5,15 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
-using TruckLoadingApp.API.Hubs;
 using TruckLoadingApp.API.Services;
 using TruckLoadingApp.Application.Services;
 using TruckLoadingApp.Application.Services.Interfaces;
 using TruckLoadingApp.Domain.Enums;
 using TruckLoadingApp.Domain.Models;
 using TruckLoadingApp.Infrastructure.Data;
-using Microsoft.Extensions.Logging;
-using System.Security.Claims; // Add logging namespace
+using System.Security.Claims;
+using Asp.Versioning;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +30,20 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         sqlOptions => sqlOptions.MigrationsAssembly("TruckLoadingApp.Infrastructure").UseNetTopologySuite()
     )
 );
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
 
 // Redis Configuration
 var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
@@ -184,6 +198,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -217,7 +232,6 @@ app.UseCors("AllowBlazorClient");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapHub<TruckHub>("/truckHub");
 
 await app.RunAsync();
 

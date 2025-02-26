@@ -23,6 +23,9 @@ namespace TruckLoadingApp.Application.Services
 
         public async Task<Booking> CreateBooking(Load load, Truck truck, decimal agreedPrice, string priceCalculationMethod, string currency)
         {
+            if (load == null || truck == null)
+                throw new ArgumentNullException();
+
             _logger.LogInformation($"Creating booking for LoadId: {load.Id}, TruckId: {truck.Id}");
             var booking = new Booking
             {
