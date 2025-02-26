@@ -7,6 +7,7 @@ namespace TruckLoadingApp.API.Models.Requests
     {
         public TruckerRegisterRequest()
         {
+            
             UserType = UserType.Trucker;
         }
 

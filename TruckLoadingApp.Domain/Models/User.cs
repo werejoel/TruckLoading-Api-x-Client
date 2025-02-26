@@ -14,6 +14,12 @@ namespace TruckLoadingApp.Domain.Models
     /// </summary>
     public class User : IdentityUser
     {
+        [MaxLength(50)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [MaxLength(50)]
+        public string LastName { get; set; } = string.Empty;
+
         [Required]
         public UserType UserType { get; set; }
 

@@ -37,5 +37,7 @@ namespace TruckLoadingApp.Domain.Models
         // 🚀 Driver may or may not have an assigned truck
         public int? TruckId { get; set; }
         public Truck? Truck { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
     }
 }

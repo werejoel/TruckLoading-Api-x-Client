@@ -15,5 +15,12 @@ namespace TruckLoadingApp.API.Models.Requests
 
         [Required]
         public UserType UserType { get; set; }
+        [Required]
+        [MaxLength(50)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(50)]
+        public string LastName { get; set; } = string.Empty;
     }
 }

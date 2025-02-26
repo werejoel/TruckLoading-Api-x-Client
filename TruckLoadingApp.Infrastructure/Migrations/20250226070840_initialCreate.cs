@@ -7,7 +7,7 @@ using NetTopologySuite.Geometries;
 namespace TruckLoadingApp.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,6 +31,8 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     UserType = table.Column<int>(type: "int", nullable: false),
                     TruckOwnerType = table.Column<int>(type: "int", nullable: true),
                     CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -135,8 +137,8 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Latitude = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Longitude = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Latitude = table.Column<decimal>(type: "decimal(9,6)", nullable: false),
+                    Longitude = table.Column<decimal>(type: "decimal(9,6)", nullable: false),
                     Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -345,22 +347,17 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     OwnerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     NumberPlate = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LoadCapacityWeight = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    AvailableCapacityWeight = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    AvailableCapacityVolume = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    LoadCapacityVolume = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Height = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     Width = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     Length = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    DriverName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    DriverContactInformation = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    InsuranceInformation = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    LoadCapacityVolume = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     AvailabilityStartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     AvailabilityEndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PreferredRoute = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     IsApproved = table.Column<bool>(type: "bit", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OperationalStatus = table.Column<int>(type: "int", nullable: false)
+                    OperationalStatus = table.Column<int>(type: "int", nullable: false),
+                    AvailableCapacityWeight = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -452,7 +449,9 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     IsAvailable = table.Column<bool>(type: "bit", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TruckId = table.Column<int>(type: "int", nullable: false)
+                    TruckId = table.Column<int>(type: "int", nullable: true),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -468,7 +467,7 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                         column: x => x.TruckId,
                         principalTable: "Trucks",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -487,6 +486,31 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     table.PrimaryKey("PK_Routes", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Routes_Trucks_TruckId",
+                        column: x => x.TruckId,
+                        principalTable: "Trucks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TruckLocationHistories",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TruckId = table.Column<int>(type: "int", nullable: false),
+                    Latitude = table.Column<decimal>(type: "decimal(18,15)", nullable: false),
+                    Longitude = table.Column<decimal>(type: "decimal(18,15)", nullable: false),
+                    Speed = table.Column<decimal>(type: "decimal(10,2)", nullable: true),
+                    Heading = table.Column<int>(type: "int", nullable: true),
+                    LocationTimestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Location = table.Column<Point>(type: "geography", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TruckLocationHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TruckLocationHistories_Trucks_TruckId",
                         column: x => x.TruckId,
                         principalTable: "Trucks",
                         principalColumn: "Id",
@@ -609,37 +633,6 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TruckLocationHistories",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    TruckId = table.Column<int>(type: "int", nullable: false),
-                    BookingId = table.Column<long>(type: "bigint", nullable: true),
-                    Latitude = table.Column<decimal>(type: "decimal(18,15)", nullable: false),
-                    Longitude = table.Column<decimal>(type: "decimal(18,15)", nullable: false),
-                    Speed = table.Column<decimal>(type: "decimal(10,2)", nullable: true),
-                    Heading = table.Column<int>(type: "int", nullable: true),
-                    LocationTimestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Location = table.Column<Point>(type: "geography", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TruckLocationHistories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TruckLocationHistories_Bookings_BookingId",
-                        column: x => x.BookingId,
-                        principalTable: "Bookings",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_TruckLocationHistories_Trucks_TruckId",
-                        column: x => x.TruckId,
-                        principalTable: "Trucks",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Waypoints",
                 columns: table => new
                 {
@@ -715,7 +708,9 @@ namespace TruckLoadingApp.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Drivers_TruckId",
                 table: "Drivers",
-                column: "TruckId");
+                column: "TruckId",
+                unique: true,
+                filter: "[TruckId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Drivers_UserId",
@@ -766,11 +761,6 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                 name: "IX_Routes_TruckId",
                 table: "Routes",
                 column: "TruckId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TruckLocationHistories_BookingId",
-                table: "TruckLocationHistories",
-                column: "BookingId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TruckLocationHistories_TruckId",

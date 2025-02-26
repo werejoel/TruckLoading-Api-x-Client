@@ -13,8 +13,8 @@ using TruckLoadingApp.Infrastructure.Data;
 namespace TruckLoadingApp.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250224195655_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250226070840_initialCreate")]
+    partial class initialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -173,29 +173,14 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Property<DateTime>("AvailabilityStartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("AvailableCapacityVolume")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("AvailableCapacityWeight")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DriverContactInformation")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("DriverName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
                     b.Property<decimal?>("Height")
                         .HasColumnType("decimal(18, 2)");
-
-                    b.Property<string>("InsuranceInformation")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("IsApproved")
                         .HasColumnType("bit");
@@ -220,10 +205,6 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Property<string>("OwnerId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("PreferredRoute")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
 
                     b.Property<int>("TruckTypeId")
                         .HasColumnType("int");
@@ -375,8 +356,16 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Property<int?>("Experience")
                         .HasColumnType("int");
 
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("LicenseExpiryDate")
                         .HasColumnType("datetime2");
@@ -389,7 +378,7 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Property<decimal?>("SafetyRating")
                         .HasColumnType("decimal(3, 2)");
 
-                    b.Property<int>("TruckId")
+                    b.Property<int?>("TruckId")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedDate")
@@ -401,7 +390,9 @@ namespace TruckLoadingApp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TruckId");
+                    b.HasIndex("TruckId")
+                        .IsUnique()
+                        .HasFilter("[TruckId] IS NOT NULL");
 
                     b.HasIndex("UserId");
 
@@ -800,9 +791,6 @@ namespace TruckLoadingApp.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<long?>("BookingId")
-                        .HasColumnType("bigint");
-
                     b.Property<int?>("Heading")
                         .HasColumnType("int");
 
@@ -826,8 +814,6 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BookingId");
 
                     b.HasIndex("TruckId");
 
@@ -898,6 +884,16 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -959,10 +955,10 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Latitude")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(9, 6)");
 
                     b.Property<decimal>("Longitude")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(9, 6)");
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2");
@@ -1113,10 +1109,9 @@ namespace TruckLoadingApp.Infrastructure.Migrations
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Driver", b =>
                 {
                     b.HasOne("Truck", "Truck")
-                        .WithMany()
-                        .HasForeignKey("TruckId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .WithOne("AssignedDriver")
+                        .HasForeignKey("TruckLoadingApp.Domain.Models.Driver", "TruckId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("TruckLoadingApp.Domain.Models.User", "User")
                         .WithMany()
@@ -1222,7 +1217,7 @@ namespace TruckLoadingApp.Infrastructure.Migrations
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Route", b =>
                 {
                     b.HasOne("Truck", "Truck")
-                        .WithMany("Routes")
+                        .WithMany()
                         .HasForeignKey("TruckId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1243,17 +1238,11 @@ namespace TruckLoadingApp.Infrastructure.Migrations
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.TruckLocationHistory", b =>
                 {
-                    b.HasOne("TruckLoadingApp.Domain.Models.Booking", "Booking")
-                        .WithMany()
-                        .HasForeignKey("BookingId");
-
                     b.HasOne("Truck", "Truck")
                         .WithMany()
                         .HasForeignKey("TruckId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Booking");
 
                     b.Navigation("Truck");
                 });
@@ -1271,7 +1260,7 @@ namespace TruckLoadingApp.Infrastructure.Migrations
 
             modelBuilder.Entity("Truck", b =>
                 {
-                    b.Navigation("Routes");
+                    b.Navigation("AssignedDriver");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Load", b =>

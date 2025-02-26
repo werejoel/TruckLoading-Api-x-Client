@@ -34,6 +34,8 @@ namespace TruckLoadingApp.API.Controllers
 
             var driver = new Driver
             {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
                 LicenseNumber = request.LicenseNumber,
                 LicenseExpiryDate = request.LicenseExpiryDate,
                 Experience = request.Experience,

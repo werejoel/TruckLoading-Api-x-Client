@@ -1,19 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
+
 using TruckLoadingApp.API.Models.Requests;
-using TruckLoadingApp.Domain.Enums;
+
 using TruckLoadingApp.Domain.Models;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
-
 namespace TruckLoadingApp.API.Controllers
 {
     [Route("api/[controller]")]
@@ -115,7 +110,9 @@ namespace TruckLoadingApp.API.Controllers
                     UserName = model.Email,
                     Email = model.Email,
                     UserType = model.UserType,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.UtcNow,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName
                 };
 
                 // Handle Trucker registration
