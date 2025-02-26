@@ -1,7 +1,8 @@
+```markdown
 # TruckLoading-Api-x-Client
 
 ## Overview
-TruckLoading-Api-x-Client is a C# based application designed to facilitate and optimize the loading process for trucks. The project provides an API and client implementation to manage and streamline truck loading operations, ensuring efficient use of space and resources.
+TruckLoading-Api-x-Client is a C# based application designed to facilitate and optimize the loading process for trucks. The project provides an API and client implementation to manage and streamline the loading process.
 
 ## Features
 - **Load Optimization:** Calculate the optimal loading arrangement for various goods in a truck.
@@ -32,6 +33,18 @@ To set up the project locally, follow these steps:
     dotnet run
     ```
 
+## Requirements
+- **.NET Version:** net8.0
+- **Packages and Versions:**
+  - `Asp.Versioning.Http` Version: 8.1.0
+  - `Asp.Versioning.Mvc` Version: 8.1.0
+  - `Asp.Versioning.Mvc.ApiExplorer` Version: 8.1.0
+  - `Microsoft.AspNetCore.Authentication.JwtBearer` Version: 8.0.12
+  - `Microsoft.AspNetCore.SignalR.Core` Version: 1.2.0
+  - `Microsoft.EntityFrameworkCore.Design` Version: 8.0.12
+  - `Microsoft.EntityFrameworkCore.Tools` Version: 8.0.12
+  - `Swashbuckle.AspNetCore` Version: 6.6.2
+
 ## Usage
 ### API Endpoints
 - **GET /api/loading-plan:** Retrieve the current loading plan.
@@ -60,3 +73,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 For any questions or feedback, please open an issue on the repository or contact the project owner at [OLEMUKAN](https://github.com/OLEMUKAN).
+```
