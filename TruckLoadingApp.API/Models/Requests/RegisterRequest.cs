@@ -1,26 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using TruckLoadingApp.Domain.Models;
+using TruckLoadingApp.Domain.Enums;
 
 namespace TruckLoadingApp.API.Models.Requests
 {
-    public class RegisterRequest
+    public abstract class RegisterRequest
     {
         [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(100, MinimumLength = 6)]
+        [MinLength(6)]
         public string Password { get; set; } = string.Empty;
 
         [Required]
         public UserType UserType { get; set; }
+        [Required]
+        [MaxLength(50)]
+        public string FirstName { get; set; } = string.Empty;
 
-        // Company-specific fields
-        public string? CompanyName { get; set; }
-        public string? CompanyAddress { get; set; }
-        public string? CompanyRegistrationNumber { get; set; }
-        public string? CompanyContact { get; set; }
+        [Required]
+        [MaxLength(50)]
+        public string LastName { get; set; } = string.Empty;
     }
-
 }

@@ -2,13 +2,18 @@
 using NetTopologySuite.Geometries;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TruckLoadingApp.Domain.Enums;
 using TruckLoadingApp.Domain.Models;
 
 /// <summary>
 /// Represents a truck.
 /// </summary>
+/// <summary>
+/// Represents a truck.
+/// </summary>
 public class Truck
 {
+    [Key]
     public int Id { get; set; }
 
     [Required]
@@ -22,34 +27,16 @@ public class Truck
     public string NumberPlate { get; set; } = string.Empty;
 
     [Required]
+    [Column(TypeName = "decimal(18,2)")]
     public decimal LoadCapacityWeight { get; set; }
+
+    [Required]
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal LoadCapacityVolume { get; set; }
 
     public decimal? Height { get; set; }
     public decimal? Width { get; set; }
     public decimal? Length { get; set; }
-
-    /// <summary>
-    /// Gets or sets the name of the driver (nullable).
-    /// </summary>
-    [MaxLength(256)]
-    public string? DriverName { get; set; }
-
-
-    /// <summary>
-    /// Gets or sets the driver's contact information (nullable).
-    /// </summary>
-    [MaxLength(256)]
-    public string? DriverContactInformation { get; set; }
-
-    /// <summary>
-    /// Gets or sets the truck's insurance information (nullable).
-    /// </summary>
-    [MaxLength(256)]
-    public string? InsuranceInformation { get; set; }
-
-
-    [Required]
-    public decimal LoadCapacityVolume { get; set; }
 
     [Required]
     public DateTime AvailabilityStartDate { get; set; }
@@ -57,17 +44,22 @@ public class Truck
     [Required]
     public DateTime AvailabilityEndDate { get; set; }
 
-    [MaxLength(256)]
-    public string? PreferredRoute { get; set; }
+    public bool IsApproved { get; set; } = false; // 🚀 Trucks must be approved before use
 
-    public bool IsApproved { get; set; }
-    public DateTime CreatedDate { get; set; }
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedDate { get; set; }
 
     // Navigation properties
     public TruckType? TruckType { get; set; }
     public User? Owner { get; set; } // Can be either a Trucker or a Company
-    public List<Route> Routes { get; set; } = new List<Route>();
-}
 
+    public TruckOperationalStatusEnum OperationalStatus { get; set; }
+
+    // 🚀 New Relationship: Driver Assigned to This Truck
+    public Driver? AssignedDriver { get; set; }
+
+    [Required]
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal AvailableCapacityWeight { get; set; }
+}
 

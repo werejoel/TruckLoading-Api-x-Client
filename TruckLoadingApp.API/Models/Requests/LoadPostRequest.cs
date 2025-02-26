@@ -1,41 +1,28 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TruckLoadingApp.Domain.Enums;
 
-namespace TruckLoadingApp.API.Models.Requests
+public class LoadPostRequest
 {
-    public class LoadPostRequest
-    {
-        [Required]
-        public decimal OriginLatitude { get; set; }
+    [Required]
+    public decimal Weight { get; set; }
 
-        [Required]
-        public decimal OriginLongitude { get; set; }
+    [Required]
+    [MaxLength(500)]
+    public string Description { get; set; } = string.Empty;
 
-        [Required]
-        public decimal DestinationLatitude { get; set; }
+    public decimal? Height { get; set; }
+    public decimal? Width { get; set; }
+    public decimal? Length { get; set; }
 
-        [Required]
-        public decimal DestinationLongitude { get; set; }
+    public string? SpecialRequirements { get; set; }
 
-        [Required]
-        public decimal Weight { get; set; }
+    [Required]
+    public DateTime PickupDate { get; set; }
 
-        public string? Description { get; set; }
+    [Required]
+    public DateTime DeliveryDate { get; set; }
 
-        public decimal? Height { get; set; }
-
-        public decimal? Width { get; set; }
-
-        public decimal? Length { get; set; }
-
-        public string? SpecialRequirements { get; set; }
-
-        [Required]
-        public DateTime PickupDate { get; set; }
-
-        [Required]
-        public DateTime DeliveryDate { get; set; }
-
-        [Required]
-        public bool IsFromShipper { get; set; }
-    }
+    [Required]
+    public GoodsTypeEnum GoodsType { get; set; }
+    public int? RequiredTruckTypeId { get; internal set; }
 }
