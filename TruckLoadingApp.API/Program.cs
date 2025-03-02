@@ -129,7 +129,10 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:5094",
             "https://localhost:5049",
-            "http://localhost:7094"
+            "http://localhost:7094",
+            "http://localhost:5174",
+            "http://localhost:5173",
+            "https://localhost:7021"
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -156,9 +159,11 @@ builder.Services.AddScoped<ILoadTagService, LoadTagService>();
 builder.Services.AddScoped<ILoadTemperatureService, LoadTemperatureService>();
 builder.Services.AddScoped<IDriverPerformanceService, DriverPerformanceService>();
 builder.Services.AddScoped<IDriverDocumentService, DriverDocumentService>();
+builder.Services.AddScoped<IShipperService, ShipperService>();
+builder.Services.AddScoped<ITruckRouteService, TruckRouteService>();
 
 // Add Authentication Services
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<TruckLoadingApp.Application.Services.Authentication.Interfaces.IAuthService, TruckLoadingApp.Application.Services.Authentication.AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 // Add ComplianceCheckerService first to break circular dependency

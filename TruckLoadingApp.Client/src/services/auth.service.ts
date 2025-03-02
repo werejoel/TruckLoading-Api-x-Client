@@ -1,0 +1,204 @@
+import api from './api';
+import { 
+  LoginRequest, 
+  ShipperRegisterRequest, 
+  TruckerRegisterRequest, 
+  CompanyRegisterRequest,
+  AuthResponse
+} from '../types/auth.types';
+
+class AuthService {
+  // Login method
+  async login(loginData: LoginRequest): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>('/auth/login', loginData);
+    
+    if (response.data.token) {
+      // Parse the JWT token to get additional claims
+      const tokenParts = response.data.token.split('.');
+      let userData: any = {
+        id: response.data.userId,
+        username: response.data.username,
+        roles: response.data.roles
+      };
+      
+      // Try to extract additional claims from the token
+      if (tokenParts.length === 3) {
+        try {
+          const tokenPayload = JSON.parse(atob(tokenParts[1]));
+          
+          // Extract company-specific claims if present
+          if (response.data.roles.includes('Company')) {
+            if (tokenPayload.CompanyName) {
+              userData = {
+                ...userData,
+                companyName: tokenPayload.CompanyName
+              };
+            }
+            
+            if (tokenPayload.CompanyRegistrationNumber) {
+              userData = {
+                ...userData,
+                companyRegistrationNumber: tokenPayload.CompanyRegistrationNumber
+              };
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing JWT token:', error);
+        }
+      }
+      
+      // Store tokens in localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
+    
+    return response.data;
+  }
+  
+  // Logout method
+  logout(): void {
+    const userId = this.getCurrentUserId();
+    if (userId) {
+      // Call the logout API
+      api.post('/auth/logout', { userId }).catch(error => {
+        console.error('Error during logout:', error);
+      });
+    }
+    
+    // Remove tokens from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+  }
+  
+  // Register shipper method
+  async registerShipper(registerData: ShipperRegisterRequest): Promise<AuthResponse> {
+    // Map frontend field names to backend field names
+    const backendData = {
+      Username: registerData.email,
+      Password: registerData.password,
+      ConfirmPassword: registerData.confirmPassword || registerData.password, // Use confirmPassword if provided
+      FirstName: registerData.firstName,
+      LastName: registerData.lastName,
+      UserType: 1 // Numeric value for Shipper (1)
+    };
+    
+    const response = await api.post<AuthResponse>('/auth/register/shipper', backendData);
+    
+    if (response.data.token) {
+      // Store tokens in localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('user', JSON.stringify({
+        id: response.data.userId,
+        username: response.data.username,
+        roles: response.data.roles
+      }));
+    }
+    
+    return response.data;
+  }
+  
+  // Register trucker method
+  async registerTrucker(registerData: TruckerRegisterRequest): Promise<AuthResponse> {
+    // Map frontend field names to backend field names
+    const backendData = {
+      Username: registerData.email,
+      Password: registerData.password,
+      ConfirmPassword: registerData.confirmPassword || registerData.password, // Use confirmPassword if provided
+      FirstName: registerData.firstName,
+      LastName: registerData.lastName,
+      UserType: 2, // Numeric value for Trucker (2)
+      TruckOwnerType: registerData.truckOwnerType === 'Individual' ? 1 : 2 // Convert to numeric value
+    };
+    
+    const response = await api.post<AuthResponse>('/auth/register/trucker', backendData);
+    
+    if (response.data.token) {
+      // Store tokens in localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('user', JSON.stringify({
+        id: response.data.userId,
+        username: response.data.username,
+        roles: response.data.roles
+      }));
+    }
+    
+    return response.data;
+  }
+  
+  // Register company method
+  async registerCompany(registerData: CompanyRegisterRequest): Promise<AuthResponse> {
+    // Map frontend field names to backend field names
+    const backendData = {
+      Username: registerData.email,
+      Password: registerData.password,
+      ConfirmPassword: registerData.confirmPassword || registerData.password, // Use confirmPassword if provided
+      FirstName: registerData.firstName,
+      LastName: registerData.lastName,
+      UserType: 3, // Numeric value for Company (3)
+      CompanyName: registerData.companyName,
+      CompanyAddress: registerData.companyAddress,
+      CompanyRegistrationNumber: registerData.companyRegistrationNumber,
+      CompanyContact: registerData.companyContact
+    };
+    
+    const response = await api.post<AuthResponse>('/auth/register/company', backendData);
+    
+    if (response.data.token) {
+      // Store tokens in localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+      localStorage.setItem('user', JSON.stringify({
+        id: response.data.userId,
+        username: response.data.username,
+        roles: response.data.roles,
+        companyName: registerData.companyName,
+        companyRegistrationNumber: registerData.companyRegistrationNumber
+      }));
+    }
+    
+    return response.data;
+  }
+  
+  // Check if user is logged in
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem('token');
+  }
+  
+  // Get current user ID
+  getCurrentUserId(): string | null {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+    
+    try {
+      const user = JSON.parse(userStr);
+      return user.id;
+    } catch (error) {
+      return null;
+    }
+  }
+  
+  // Get current user roles
+  getCurrentUserRoles(): string[] {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return [];
+    
+    try {
+      const user = JSON.parse(userStr);
+      return user.roles || [];
+    } catch (error) {
+      return [];
+    }
+  }
+  
+  // Check if user has a specific role
+  hasRole(role: string): boolean {
+    const roles = this.getCurrentUserRoles();
+    return roles.includes(role);
+  }
+}
+
+export default new AuthService(); 

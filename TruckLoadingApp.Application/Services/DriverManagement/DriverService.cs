@@ -119,7 +119,7 @@ namespace TruckLoadingApp.Application.Services
                 .Include(d => d.Truck)
                 .Include(d => d.RoutePreferences)
                 .Include(d => d.Performances.OrderByDescending(p => p.Date).Take(1))
-                .Where(d => _context.Trucks.Any(t => t.OwnerId == companyId && t.Id == d.TruckId))
+                .Where(d => d.CompanyId == companyId)
                 .ToListAsync();
         }
 
@@ -211,6 +211,27 @@ namespace TruckLoadingApp.Application.Services
         public Task<bool> AssignOwnerAsDriver(string ownerId, int truckId)
         {
             return AssignOwnerAsDriverAsync(ownerId, truckId);
+        }
+
+        public async Task<Driver> RegisterDriverForCompanyAsync(Driver driver, string companyId)
+        {
+            if (string.IsNullOrEmpty(companyId))
+                throw new ArgumentException("Company ID cannot be empty", nameof(companyId));
+
+            // Set the company ID
+            driver.CompanyId = companyId;
+            driver.CreatedDate = DateTime.UtcNow;
+            
+            // Initialize collections
+            driver.Documents = new List<DriverDocument>();
+            driver.Performances = new List<DriverPerformance>();
+            driver.Schedules = new List<DriverSchedule>();
+            driver.RestPeriods = new List<DriverRestPeriod>();
+
+            _context.Drivers.Add(driver);
+            await _context.SaveChangesAsync();
+            
+            return driver;
         }
     }
 }

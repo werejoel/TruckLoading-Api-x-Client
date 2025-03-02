@@ -6,7 +6,7 @@ using TruckLoadingApp.Domain.Models;
 
 namespace TruckLoadingApp.API.Controllers
 {
-    [EnableRateLimiting("default")]
+    //[EnableRateLimiting("default")]
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]

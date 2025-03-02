@@ -437,6 +437,20 @@ namespace TruckLoadingApp.Application.Services.Authentication
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
 
+            // Add company-specific claims if the user is a company
+            if (userRoles.Contains("Company"))
+            {
+                if (!string.IsNullOrEmpty(user.CompanyName))
+                {
+                    authClaims.Add(new Claim("CompanyName", user.CompanyName));
+                }
+                
+                if (!string.IsNullOrEmpty(user.CompanyRegistrationNumber))
+                {
+                    authClaims.Add(new Claim("CompanyRegistrationNumber", user.CompanyRegistrationNumber));
+                }
+            }
+
             foreach (var userRole in userRoles)
             {
                 authClaims.Add(new Claim(ClaimTypes.Role, userRole));

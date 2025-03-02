@@ -3,26 +3,31 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TruckLoadingApp.Application.Services.Interfaces;
 using TruckLoadingApp.Domain.Models;
+using TruckLoadingApp.Infrastructure.Data;
 
 namespace TruckLoadingApp.API.Controllers.TruckManagement
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/truck-types")]
     [Authorize]
     public class TruckTypeController : ControllerBase
     {
         private readonly ITruckTypeService _truckTypeService;
         private readonly ILogger<TruckTypeController> _logger;
+        private readonly ApplicationDbContext _context;
 
         public TruckTypeController(
             ITruckTypeService truckTypeService,
-            ILogger<TruckTypeController> logger)
+            ILogger<TruckTypeController> logger,
+            ApplicationDbContext context)
         {
             _truckTypeService = truckTypeService;
             _logger = logger;
+            _context = context;
         }
 
         [HttpGet]
@@ -30,13 +35,17 @@ namespace TruckLoadingApp.API.Controllers.TruckManagement
         {
             try
             {
-                var truckTypes = await _truckTypeService.GetAllTruckTypesAsync();
+                var truckTypes = await _context.TruckTypes
+                    .Where(tt => tt.IsActive)
+                    .OrderBy(tt => tt.Name)
+                    .ToListAsync();
+                
                 return Ok(truckTypes);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving all truck types");
-                return StatusCode(500, "An error occurred while retrieving truck types");
+                _logger.LogError(ex, "Error retrieving truck types");
+                return StatusCode(500, new { Message = "An error occurred while retrieving truck types", Error = ex.Message });
             }
         }
 

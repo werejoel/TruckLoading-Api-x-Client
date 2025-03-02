@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using TruckLoadingApp.Application.Services.Authentication.Interfaces;
 using TruckLoadingApp.Domain.DTOs;
+using System.Linq;
 
 namespace TruckLoadingApp.API.Controllers.Authentication
 {
@@ -29,13 +30,30 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+                    
+                    return BadRequest(new { 
+                        Success = false,
+                        Message = "Validation failed",
+                        Errors = errors
+                    });
                 }
 
                 var result = await _authService.LoginAsync(loginDto);
                 if (result == null)
                 {
-                    return Unauthorized("Invalid username or password");
+                    return Unauthorized(new {
+                        Success = false,
+                        Message = "Invalid username or password"
+                    });
+                }
+
+                if (!result.Success)
+                {
+                    return Unauthorized(result); // Return the error response from the service
                 }
 
                 return Ok(result);
@@ -43,7 +61,11 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during login for user {Username}", loginDto.Username);
-                return StatusCode(500, "An error occurred during login");
+                return StatusCode(500, new {
+                    Success = false,
+                    Message = "An error occurred during login",
+                    Error = ex.Message
+                });
             }
         }
 
@@ -81,13 +103,30 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+                    
+                    return BadRequest(new { 
+                        Success = false,
+                        Message = "Validation failed",
+                        Errors = errors
+                    });
                 }
 
                 var result = await _authService.RegisterShipperAsync(registerDto);
                 if (result == null)
                 {
-                    return BadRequest("Shipper registration failed");
+                    return BadRequest(new { 
+                        Success = false,
+                        Message = "Shipper registration failed. Please check your input and try again."
+                    });
+                }
+
+                if (!result.Success)
+                {
+                    return BadRequest(result); // Return the error response from the service
                 }
 
                 return Ok(result);
@@ -95,7 +134,11 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during shipper registration for user {Username}", registerDto.Username);
-                return StatusCode(500, "An error occurred during shipper registration");
+                return StatusCode(500, new {
+                    Success = false,
+                    Message = "An error occurred during shipper registration",
+                    Error = ex.Message
+                });
             }
         }
 
@@ -107,13 +150,30 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+                    
+                    return BadRequest(new { 
+                        Success = false,
+                        Message = "Validation failed",
+                        Errors = errors
+                    });
                 }
 
                 var result = await _authService.RegisterTruckerAsync(registerDto);
                 if (result == null)
                 {
-                    return BadRequest("Trucker registration failed");
+                    return BadRequest(new { 
+                        Success = false,
+                        Message = "Trucker registration failed. Please check your input and try again."
+                    });
+                }
+
+                if (!result.Success)
+                {
+                    return BadRequest(result); // Return the error response from the service
                 }
 
                 return Ok(result);
@@ -121,7 +181,11 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during trucker registration for user {Username}", registerDto.Username);
-                return StatusCode(500, "An error occurred during trucker registration");
+                return StatusCode(500, new {
+                    Success = false,
+                    Message = "An error occurred during trucker registration",
+                    Error = ex.Message
+                });
             }
         }
 
@@ -133,13 +197,30 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+                    
+                    return BadRequest(new { 
+                        Success = false,
+                        Message = "Validation failed",
+                        Errors = errors
+                    });
                 }
 
                 var result = await _authService.RegisterCompanyAsync(registerDto);
                 if (result == null)
                 {
-                    return BadRequest("Company registration failed");
+                    return BadRequest(new { 
+                        Success = false,
+                        Message = "Company registration failed. Please check your input and try again."
+                    });
+                }
+
+                if (!result.Success)
+                {
+                    return BadRequest(result); // Return the error response from the service
                 }
 
                 return Ok(result);
@@ -147,7 +228,11 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during company registration for user {Username}", registerDto.Username);
-                return StatusCode(500, "An error occurred during company registration");
+                return StatusCode(500, new {
+                    Success = false,
+                    Message = "An error occurred during company registration",
+                    Error = ex.Message
+                });
             }
         }
 
@@ -159,13 +244,30 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+                    
+                    return BadRequest(new { 
+                        Success = false,
+                        Message = "Validation failed",
+                        Errors = errors
+                    });
                 }
 
                 var result = await _authService.RegisterAdminAsync(registerDto);
                 if (result == null)
                 {
-                    return BadRequest("Admin registration failed");
+                    return BadRequest(new { 
+                        Success = false,
+                        Message = "Admin registration failed. Please check your input and try again."
+                    });
+                }
+
+                if (!result.Success)
+                {
+                    return BadRequest(result); // Return the error response from the service
                 }
 
                 return Ok(result);
@@ -173,7 +275,11 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during admin registration for user {Username}", registerDto.Username);
-                return StatusCode(500, "An error occurred during admin registration");
+                return StatusCode(500, new {
+                    Success = false,
+                    Message = "An error occurred during admin registration",
+                    Error = ex.Message
+                });
             }
         }
 
@@ -184,13 +290,30 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+                    
+                    return BadRequest(new { 
+                        Success = false,
+                        Message = "Validation failed",
+                        Errors = errors
+                    });
                 }
 
                 var result = await _authService.RefreshTokenAsync(refreshTokenDto);
                 if (result == null)
                 {
-                    return Unauthorized("Invalid refresh token");
+                    return Unauthorized(new {
+                        Success = false,
+                        Message = "Invalid refresh token"
+                    });
+                }
+
+                if (!result.Success)
+                {
+                    return Unauthorized(result); // Return the error response from the service
                 }
 
                 return Ok(result);
@@ -198,7 +321,11 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error refreshing token");
-                return StatusCode(500, "An error occurred while refreshing the token");
+                return StatusCode(500, new {
+                    Success = false,
+                    Message = "An error occurred while refreshing the token",
+                    Error = ex.Message
+                });
             }
         }
 

@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
+using TruckLoadingApp.API.Services;
 using TruckLoadingApp.Domain.Models;
 
-namespace TruckLoadingApp.API.Services
+namespace TruckLoadingApp.Application.Services
 {
     public class TruckLocationService : ITruckLocationService
     {

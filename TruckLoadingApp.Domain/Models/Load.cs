@@ -28,6 +28,22 @@ namespace TruckLoadingApp.Domain.Models
         public DateTime PickupDate { get; set; }
         public DateTime DeliveryDate { get; set; }
 
+        // Add pickup location details
+        [MaxLength(200)]
+        public string? PickupAddress { get; set; }
+        
+        public decimal? PickupLatitude { get; set; }
+        
+        public decimal? PickupLongitude { get; set; }
+        
+        // Add delivery location details
+        [MaxLength(200)]
+        public string? DeliveryAddress { get; set; }
+        
+        public decimal? DeliveryLatitude { get; set; }
+        
+        public decimal? DeliveryLongitude { get; set; }
+
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedDate { get; set; }
 

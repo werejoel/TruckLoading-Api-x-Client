@@ -20,5 +20,6 @@ namespace TruckLoadingApp.Application.Services.DriverManagement.Interfaces
         Task<Driver> CreateDriverAsync(Driver driver);
         Task<bool> UpdateDriverAsync(Driver driver);
         Task<bool> DeleteDriverAsync(long id);
+        Task<Driver> RegisterDriverForCompanyAsync(Driver driver, string companyId);
     }
 }

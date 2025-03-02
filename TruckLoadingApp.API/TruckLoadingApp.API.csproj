@@ -24,4 +24,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\TruckLoadingApp.Application\TruckLoadingApp.Application.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Services\" />
+	</ItemGroup>
 </Project>

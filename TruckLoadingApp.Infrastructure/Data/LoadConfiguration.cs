@@ -26,6 +26,25 @@ namespace TruckLoadingApp.Infrastructure.Data
             builder.Property(l => l.Description)
                 .HasMaxLength(500);
 
+            // Configure new location fields
+            builder.Property(l => l.PickupAddress)
+                .HasMaxLength(200);
+
+            builder.Property(l => l.PickupLatitude)
+                .HasColumnType("decimal(9, 6)");
+
+            builder.Property(l => l.PickupLongitude)
+                .HasColumnType("decimal(9, 6)");
+
+            builder.Property(l => l.DeliveryAddress)
+                .HasMaxLength(200);
+
+            builder.Property(l => l.DeliveryLatitude)
+                .HasColumnType("decimal(9, 6)");
+
+            builder.Property(l => l.DeliveryLongitude)
+                .HasColumnType("decimal(9, 6)");
+
             builder.Property(l => l.Price)
                  .HasColumnType("decimal(18, 2)");
 

@@ -46,6 +46,8 @@ namespace TruckLoadingApp.Infrastructure.Data
         public DbSet<GroupMessage> GroupMessages { get; set; }
         public DbSet<GroupMessageReceipt> GroupMessageReceipts { get; set; }
         public DbSet<RecurringScheduleInstance> RecurringScheduleInstances { get; set; }
+        public DbSet<TruckRoute> TruckRoutes { get; set; }
+        public DbSet<TruckRouteWaypoint> TruckRouteWaypoints { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -84,6 +86,8 @@ namespace TruckLoadingApp.Infrastructure.Data
             builder.ApplyConfiguration(new UserMessageConfiguration());
             builder.ApplyConfiguration(new GroupMessageConfiguration());
             builder.ApplyConfiguration(new GroupMessageReceiptConfiguration());
+            builder.ApplyConfiguration(new TruckRouteConfiguration());
+            builder.ApplyConfiguration(new TruckRouteWaypointConfiguration());
             
             // Add new configurations for entities with decimal properties
             builder.ApplyConfiguration(new DriverPerformanceConfiguration());

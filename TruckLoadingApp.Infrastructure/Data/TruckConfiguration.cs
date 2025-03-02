@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TruckLoadingApp.Domain.Models;
 
 namespace TruckLoadingApp.Infrastructure.Data
 {
@@ -29,6 +30,10 @@ namespace TruckLoadingApp.Infrastructure.Data
                 .HasColumnType("decimal(18, 2)");
 
             builder.Property(t => t.AvailableCapacityWeight)
+                .HasColumnType("decimal(18,2)");
+                
+            // Add configuration for VolumeCapacity
+            builder.Property(t => t.VolumeCapacity)
                 .HasColumnType("decimal(18,2)");
 
             // Relationships

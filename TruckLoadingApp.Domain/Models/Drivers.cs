@@ -11,6 +11,9 @@ namespace TruckLoadingApp.Domain.Models
         [Required]
         public string UserId { get; set; } = string.Empty;
 
+        // Add CompanyId to establish relationship with Company
+        public string? CompanyId { get; set; }
+
         [Required]
         [MaxLength(50)]
         public string LicenseNumber { get; set; } = string.Empty;
@@ -39,6 +42,10 @@ namespace TruckLoadingApp.Domain.Models
 
         [ForeignKey("UserId")]
         public User User { get; set; } = null!;
+
+        // Add Company navigation property
+        [ForeignKey("CompanyId")]
+        public User? Company { get; set; }
 
         public int? TruckId { get; set; }
 
