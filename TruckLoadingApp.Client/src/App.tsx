@@ -15,6 +15,9 @@ import TruckDetailPage from './pages/TruckDetailPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import CreateLoadPage from './pages/CreateLoadPage';
+import EditLoadPage from './pages/EditLoadPage';
+import BookTruckPage from './pages/BookTruckPage';
 
 // Root redirect component
 const RootRedirect = () => {
@@ -62,6 +65,9 @@ function App() {
           {/* Shipper-specific routes */}
           <Route element={<ProtectedRoute requiredRole="Shipper" />}>
             <Route path="/shipper/dashboard" element={<DashboardPage />} />
+            <Route path="/loads/create" element={<CreateLoadPage />} />
+            <Route path="/loads/edit/:id" element={<EditLoadPage />} />
+            <Route path="/loads/:loadId/book/:truckId" element={<BookTruckPage />} />
           </Route>
           
           {/* Trucker-specific routes */}

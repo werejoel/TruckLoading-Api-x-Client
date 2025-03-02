@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
 import shipperService, { Load, TruckMatchResponse } from '../../services/shipper.service';
 import { format } from 'date-fns';
 
 const ShipperDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loads, setLoads] = useState<Load[]>([]);
   const [selectedLoad, setSelectedLoad] = useState<Load | null>(null);
   const [matchingTrucks, setMatchingTrucks] = useState<TruckMatchResponse[]>([]);
@@ -49,6 +51,32 @@ const ShipperDashboard: React.FC = () => {
       setError(err.message || 'Failed to load matching trucks');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateLoad = () => {
+    navigate('/loads/create');
+  };
+
+  const handleEditLoad = (load: Load) => {
+    navigate(`/loads/edit/${load.id}`);
+  };
+
+  const handleDeleteLoad = async (load: Load) => {
+    if (window.confirm(`Are you sure you want to delete load #${load.id}?`)) {
+      try {
+        setLoading(true);
+        await shipperService.deleteLoad(load.id);
+        fetchLoads();
+        if (selectedLoad?.id === load.id) {
+          setSelectedLoad(null);
+        }
+      } catch (err: any) {
+        console.error('Error deleting load:', err);
+        setError(err.message || 'Failed to delete load');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -137,17 +165,31 @@ const ShipperDashboard: React.FC = () => {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">My Loads</h2>
-                <button
-                  onClick={fetchLoads}
-                  className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Refresh
-                </button>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={fetchLoads}
+                    className="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Refresh
+                  </button>
+                  <button
+                    onClick={handleCreateLoad}
+                    className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Create New Load
+                  </button>
+                </div>
               </div>
 
               {loads.length === 0 ? (
                 <div className="bg-white shadow overflow-hidden sm:rounded-md p-6 text-center">
                   <p className="text-gray-500">No loads found. Create a new load to get started.</p>
+                  <button
+                    onClick={handleCreateLoad}
+                    className="mt-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Create New Load
+                  </button>
                 </div>
               ) : (
                 <div className="bg-white shadow overflow-hidden sm:rounded-md">
@@ -178,6 +220,18 @@ const ShipperDashboard: React.FC = () => {
                                 className="px-3 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                               >
                                 Details
+                              </button>
+                              <button
+                                onClick={() => handleEditLoad(load)}
+                                className="px-3 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteLoad(load)}
+                                className="px-3 py-1 border border-gray-300 text-xs font-medium rounded text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                              >
+                                Delete
                               </button>
                               <button
                                 onClick={() => handleViewMatchingTrucks(load)}
@@ -402,12 +456,8 @@ const ShipperDashboard: React.FC = () => {
                           </div>
                           <div className="mt-2 flex justify-end">
                             <button
-                              onClick={() => {
-                                // Book the truck
-                                alert(`Booking truck ${truck.registrationNumber} for load #${selectedLoad.id}`);
-                                // In a real app, you would call a booking API here
-                              }}
-                              className="px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                              onClick={() => navigate(`/loads/${selectedLoad.id}/book/${truck.id}`)}
+                              className="px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:border-indigo-500"
                             >
                               Book Now
                             </button>
