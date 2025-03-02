@@ -164,6 +164,9 @@ namespace TruckLoadingApp.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<long?>("AssignedDriverId")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime>("AvailabilityEndDate")
                         .HasColumnType("datetime2");
 
@@ -281,6 +284,44 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.ToTable("Bookings");
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.CompanyHierarchy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CompanyId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DepartmentName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ParentDepartmentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentDepartmentId");
+
+                    b.HasIndex("CompanyId", "Level");
+
+                    b.ToTable("CompanyHierarchy");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.ContactDetails", b =>
                 {
                     b.Property<string>("UserId")
@@ -297,6 +338,37 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("ContactDetails");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DepartmentMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("JoinedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("DepartmentId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("DepartmentMembers");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Documents", b =>
@@ -356,14 +428,16 @@ namespace TruckLoadingApp.Infrastructure.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("LicenseExpiryDate")
                         .HasColumnType("datetime2");
@@ -397,6 +471,482 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.ToTable("Drivers");
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverCertification", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CertificationNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CertificationType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("DriverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IssuedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RenewalDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId");
+
+                    b.ToTable("DriverCertification");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverDocument", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DocumentNumber")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("DocumentUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<long>("DriverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("VerificationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VerifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId");
+
+                    b.ToTable("DriverDocument");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverPerformance", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("CustomerRating")
+                        .HasColumnType("decimal(5, 2)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("DriverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("FuelEfficiency")
+                        .HasColumnType("decimal(8, 2)");
+
+                    b.Property<int>("HarshAccelerationEvents")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HarshBrakingEvents")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HoursOfServiceViolations")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LateDeliveries")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaintenanceIssuesReported")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OnTimeDeliveries")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("OnTimeDeliveryRate")
+                        .HasColumnType("decimal(5, 2)");
+
+                    b.Property<decimal>("OverallPerformanceScore")
+                        .HasColumnType("decimal(5, 2)");
+
+                    b.Property<string>("PerformanceNotes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Rating")
+                        .HasColumnType("decimal(5, 2)");
+
+                    b.Property<int>("RestBreakViolations")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SafetyIncidents")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SafetyScore")
+                        .HasColumnType("decimal(5, 2)");
+
+                    b.Property<int>("SafetyViolations")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SpeedingEvents")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalDeliveries")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("TotalDrivingTime")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("TotalRestTime")
+                        .HasColumnType("time");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("VehicleInspectionScore")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId");
+
+                    b.ToTable("DriverPerformance");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverRestPeriod", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ComplianceNotes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("DriverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompliant")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId");
+
+                    b.ToTable("DriverRestPeriod");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverRoutePreference", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AdditionalNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("AvoidFerries")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AvoidNightDriving")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AvoidPeakHours")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AvoidSevereWeather")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AvoidSnowRoutes")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AvoidTolls")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AvoidUrbanCenters")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("AvoidedLoadTypes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AvoidedRegions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ComfortPriority")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("DriverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("FuelEfficiencyPriority")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("MaxPreferredWeight")
+                        .HasColumnType("decimal(10, 2)");
+
+                    b.Property<decimal?>("MaxWindSpeed")
+                        .HasColumnType("decimal(5, 2)");
+
+                    b.Property<bool>("PreferHighways")
+                        .HasColumnType("bit");
+
+                    b.Property<TimeSpan?>("PreferredEndTime")
+                        .HasColumnType("time");
+
+                    b.Property<string>("PreferredLoadTypes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PreferredRegions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PreferredRestStopAmenities")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PreferredRestStopInterval")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan?>("PreferredStartTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("SafetyPriority")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TimePriority")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId")
+                        .IsUnique();
+
+                    b.ToTable("DriverRoutePreference");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverSchedule", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DistanceCovered")
+                        .HasColumnType("decimal(10, 2)");
+
+                    b.Property<long>("DriverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("FuelUsed")
+                        .HasColumnType("decimal(10, 2)");
+
+                    b.Property<int?>("InstanceNumber")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRecurring")
+                        .HasColumnType("bit");
+
+                    b.Property<long?>("LoadId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RecurrenceEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("RecurrencePattern")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("RecurringScheduleId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId");
+
+                    b.HasIndex("LoadId");
+
+                    b.HasIndex("RecurringScheduleId");
+
+                    b.ToTable("DriverSchedule");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.GroupMessage", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("RelatedEntityId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RelatedEntityType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("SentTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderId", "SentTime");
+
+                    b.HasIndex("TeamId", "SentTime");
+
+                    b.ToTable("GroupMessages");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.GroupMessageReceipt", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("GroupMessageId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("ReadTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("GroupMessageId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("GroupMessageReceipts");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Load", b =>
                 {
                     b.Property<long>("Id")
@@ -412,6 +962,10 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
 
+                    b.Property<string>("CustomsDeclarationNumber")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<DateTime>("DeliveryDate")
                         .HasColumnType("datetime2");
 
@@ -422,8 +976,21 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Property<int>("GoodsType")
                         .HasColumnType("int");
 
+                    b.Property<string>("HandlingInstructions")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("HazardousMaterialClass")
+                        .HasColumnType("int");
+
                     b.Property<decimal?>("Height")
                         .HasColumnType("decimal(18, 2)");
+
+                    b.Property<bool>("IsFragile")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsStackable")
+                        .HasColumnType("bit");
 
                     b.Property<decimal?>("Length")
                         .HasColumnType("decimal(18, 2)");
@@ -437,18 +1004,39 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Property<decimal?>("Price")
                         .HasColumnType("decimal(18, 2)");
 
+                    b.Property<string>("Region")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("RequiredTruckTypeId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("RequiresCustomsDeclaration")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresStackingControl")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresTemperatureControl")
+                        .HasColumnType("bit");
 
                     b.Property<string>("ShipperId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("SpecialRequirements")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("StackingInstructions")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<string>("UNNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
@@ -460,6 +1048,10 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                         .HasColumnType("decimal(18, 2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LoadTypeId");
+
+                    b.HasIndex("RequiredTruckTypeId");
 
                     b.HasIndex("ShipperId");
 
@@ -489,6 +1081,30 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.HasKey("LoadId");
 
                     b.ToTable("LoadDimensions");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.LoadLoadTag", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("LoadId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("LoadTagId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoadTagId");
+
+                    b.HasIndex("LoadId", "LoadTagId")
+                        .IsUnique();
+
+                    b.ToTable("LoadLoadTags");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.LoadStop", b =>
@@ -532,6 +1148,67 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.HasIndex("BookingId");
 
                     b.ToTable("LoadStops");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.LoadTag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("LoadTags");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.LoadTemperatureRequirement", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("LoadId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("MaxTemperature")
+                        .HasColumnType("decimal(5, 2)");
+
+                    b.Property<decimal>("MinTemperature")
+                        .HasColumnType("decimal(5, 2)");
+
+                    b.Property<int?>("MonitoringIntervalMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("RequiresContinuousMonitoring")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TemperatureUnit")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoadId")
+                        .IsUnique();
+
+                    b.ToTable("LoadTemperatureRequirements");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.LoadType", b =>
@@ -612,6 +1289,108 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.HasIndex("BookingId");
 
                     b.ToTable("PaymentDetails");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.PayrollEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Deductions")
+                        .HasColumnType("decimal(12, 2)");
+
+                    b.Property<long>("DriverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("OtherBonuses")
+                        .HasColumnType("decimal(12, 2)");
+
+                    b.Property<decimal>("OvertimeHours")
+                        .HasColumnType("decimal(8, 2)");
+
+                    b.Property<decimal>("OvertimePay")
+                        .HasColumnType("decimal(12, 2)");
+
+                    b.Property<decimal>("OvertimeRate")
+                        .HasColumnType("decimal(10, 2)");
+
+                    b.Property<DateTime?>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("PerformanceBonus")
+                        .HasColumnType("decimal(12, 2)");
+
+                    b.Property<decimal>("RegularHours")
+                        .HasColumnType("decimal(8, 2)");
+
+                    b.Property<decimal>("RegularPay")
+                        .HasColumnType("decimal(12, 2)");
+
+                    b.Property<decimal>("RegularRate")
+                        .HasColumnType("decimal(10, 2)");
+
+                    b.Property<decimal>("SafetyBonus")
+                        .HasColumnType("decimal(12, 2)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalCompensation")
+                        .HasColumnType("decimal(12, 2)");
+
+                    b.Property<decimal>("TotalPay")
+                        .HasColumnType("decimal(12, 2)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId");
+
+                    b.ToTable("PayrollEntry");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permissions");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.PriceFactors", b =>
@@ -698,6 +1477,62 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.ToTable("Ratings");
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.RecurringScheduleInstance", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<long>("DriverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("InstanceNumber")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsModified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<long?>("LoadId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ParentScheduleId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId");
+
+                    b.HasIndex("LoadId");
+
+                    b.HasIndex("ParentScheduleId");
+
+                    b.ToTable("RecurringScheduleInstances");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Region", b =>
                 {
                     b.Property<int>("Id")
@@ -722,6 +1557,28 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Regions");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.RolePermission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Route", b =>
@@ -750,6 +1607,149 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.HasIndex("TruckId");
 
                     b.ToTable("Routes");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.Team", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CompanyId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TeamLeaderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("TeamLeaderId");
+
+                    b.ToTable("Teams");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.TeamMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("JoinedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TeamMembers");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.TemperatureReading", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("DeviceId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsWithinRange")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("LoadId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("Temperature")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoadId");
+
+                    b.ToTable("TemperatureReadings", (string)null);
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.TruckHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long?>("NewDriverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("NewStatus")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("PreviousDriverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("PreviousStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TruckId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TruckId");
+
+                    b.ToTable("TruckHistory");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.TruckLocation", b =>
@@ -921,6 +1921,12 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -950,6 +1956,60 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.UserActivity", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ActivityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("EntityId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("UserId", "ActivityType");
+
+                    b.ToTable("UserActivities");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.UserLocation", b =>
                 {
                     b.Property<int>("Id")
@@ -974,6 +2034,56 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserLocations");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.UserMessage", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("ReadTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RelatedEntityId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RelatedEntityType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("SentTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("ReceiverId", "SentTime");
+
+                    b.HasIndex("SenderId", "SentTime");
+
+                    b.ToTable("UserMessages");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Waypoint", b =>
@@ -1099,6 +2209,24 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Navigation("Truck");
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.CompanyHierarchy", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.User", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.CompanyHierarchy", "ParentDepartment")
+                        .WithMany("SubDepartments")
+                        .HasForeignKey("ParentDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
+
+                    b.Navigation("ParentDepartment");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.ContactDetails", b =>
                 {
                     b.HasOne("TruckLoadingApp.Domain.Models.User", "User")
@@ -1106,6 +2234,25 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                         .HasForeignKey("TruckLoadingApp.Domain.Models.ContactDetails", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DepartmentMember", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.CompanyHierarchy", "Department")
+                        .WithMany("DepartmentMembers")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Department");
 
                     b.Navigation("User");
                 });
@@ -1128,13 +2275,145 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverCertification", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Driver", "Driver")
+                        .WithMany("Certifications")
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Driver");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverDocument", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Driver", "Driver")
+                        .WithMany("Documents")
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Driver");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverPerformance", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Driver", "Driver")
+                        .WithMany("Performances")
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Driver");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverRestPeriod", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Driver", "Driver")
+                        .WithMany("RestPeriods")
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Driver");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverRoutePreference", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Driver", "Driver")
+                        .WithOne("RoutePreferences")
+                        .HasForeignKey("TruckLoadingApp.Domain.Models.DriverRoutePreference", "DriverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Driver");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverSchedule", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Driver", "Driver")
+                        .WithMany("Schedules")
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.Load", "Load")
+                        .WithMany()
+                        .HasForeignKey("LoadId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.DriverSchedule", "RecurringScheduleParent")
+                        .WithMany("RecurringInstances")
+                        .HasForeignKey("RecurringScheduleId");
+
+                    b.Navigation("Driver");
+
+                    b.Navigation("Load");
+
+                    b.Navigation("RecurringScheduleParent");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.GroupMessage", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Sender");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.GroupMessageReceipt", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.GroupMessage", "GroupMessage")
+                        .WithMany("MessageReceipts")
+                        .HasForeignKey("GroupMessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("GroupMessage");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Load", b =>
                 {
+                    b.HasOne("TruckLoadingApp.Domain.Models.LoadType", "LoadType")
+                        .WithMany()
+                        .HasForeignKey("LoadTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.TruckType", "RequiredTruckType")
+                        .WithMany()
+                        .HasForeignKey("RequiredTruckTypeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("TruckLoadingApp.Domain.Models.User", "Shipper")
                         .WithMany()
                         .HasForeignKey("ShipperId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("LoadType");
+
+                    b.Navigation("RequiredTruckType");
 
                     b.Navigation("Shipper");
                 });
@@ -1150,6 +2429,25 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Navigation("Load");
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.LoadLoadTag", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Load", "Load")
+                        .WithMany("LoadTags")
+                        .HasForeignKey("LoadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.LoadTag", "LoadTag")
+                        .WithMany("LoadTags")
+                        .HasForeignKey("LoadTagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Load");
+
+                    b.Navigation("LoadTag");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.LoadStop", b =>
                 {
                     b.HasOne("TruckLoadingApp.Domain.Models.Booking", "Booking")
@@ -1161,6 +2459,17 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Navigation("Booking");
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.LoadTemperatureRequirement", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Load", "Load")
+                        .WithOne("TemperatureRequirement")
+                        .HasForeignKey("TruckLoadingApp.Domain.Models.LoadTemperatureRequirement", "LoadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Load");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.PaymentDetails", b =>
                 {
                     b.HasOne("TruckLoadingApp.Domain.Models.Booking", "Booking")
@@ -1170,6 +2479,18 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Booking");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.PayrollEntry", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Driver", "Driver")
+                        .WithMany()
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_PayrollEntry_Drivers_DriverId");
+
+                    b.Navigation("Driver");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.PriceFactors", b =>
@@ -1218,12 +2539,109 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Navigation("RatedUser");
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.RecurringScheduleInstance", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Driver", "Driver")
+                        .WithMany()
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.Load", "Load")
+                        .WithMany()
+                        .HasForeignKey("LoadId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.DriverSchedule", "ParentSchedule")
+                        .WithMany()
+                        .HasForeignKey("ParentScheduleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Driver");
+
+                    b.Navigation("Load");
+
+                    b.Navigation("ParentSchedule");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.RolePermission", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Route", b =>
                 {
                     b.HasOne("Truck", "Truck")
                         .WithMany()
                         .HasForeignKey("TruckId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Truck");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.Team", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.User", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.User", "TeamLeader")
+                        .WithMany()
+                        .HasForeignKey("TeamLeaderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+
+                    b.Navigation("TeamLeader");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.TeamMember", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Team", "Team")
+                        .WithMany("TeamMembers")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Team");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.TemperatureReading", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.Load", "Load")
+                        .WithMany()
+                        .HasForeignKey("LoadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Load");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.TruckHistory", b =>
+                {
+                    b.HasOne("Truck", "Truck")
+                        .WithMany()
+                        .HasForeignKey("TruckId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Truck");
@@ -1251,6 +2669,36 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Navigation("Truck");
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.UserActivity", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.UserMessage", b =>
+                {
+                    b.HasOne("TruckLoadingApp.Domain.Models.User", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TruckLoadingApp.Domain.Models.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Waypoint", b =>
                 {
                     b.HasOne("TruckLoadingApp.Domain.Models.Route", "Route")
@@ -1267,14 +2715,65 @@ namespace TruckLoadingApp.Infrastructure.Migrations
                     b.Navigation("AssignedDriver");
                 });
 
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.CompanyHierarchy", b =>
+                {
+                    b.Navigation("DepartmentMembers");
+
+                    b.Navigation("SubDepartments");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.Driver", b =>
+                {
+                    b.Navigation("Certifications");
+
+                    b.Navigation("Documents");
+
+                    b.Navigation("Performances");
+
+                    b.Navigation("RestPeriods");
+
+                    b.Navigation("RoutePreferences");
+
+                    b.Navigation("Schedules");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.DriverSchedule", b =>
+                {
+                    b.Navigation("RecurringInstances");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.GroupMessage", b =>
+                {
+                    b.Navigation("MessageReceipts");
+                });
+
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Load", b =>
                 {
                     b.Navigation("LoadDimensions");
+
+                    b.Navigation("LoadTags");
+
+                    b.Navigation("TemperatureRequirement");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.LoadTag", b =>
+                {
+                    b.Navigation("LoadTags");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.Route", b =>
                 {
                     b.Navigation("Waypoints");
+                });
+
+            modelBuilder.Entity("TruckLoadingApp.Domain.Models.Team", b =>
+                {
+                    b.Navigation("TeamMembers");
                 });
 
             modelBuilder.Entity("TruckLoadingApp.Domain.Models.User", b =>

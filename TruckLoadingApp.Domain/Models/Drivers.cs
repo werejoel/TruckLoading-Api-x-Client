@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TruckLoadingApp.Domain.Models
 {
@@ -31,13 +26,31 @@ namespace TruckLoadingApp.Domain.Models
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedDate { get; set; }
 
+        [Required]
+        [MaxLength(50)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(50)]
+        public string LastName { get; set; } = string.Empty;
+
+        [NotMapped]
+        public string FullName => $"{FirstName} {LastName}";
+
         [ForeignKey("UserId")]
         public User User { get; set; } = null!;
 
-        // 🚀 Driver may or may not have an assigned truck
         public int? TruckId { get; set; }
+
+        // Remove the ForeignKey attribute to avoid duplicate relationships
         public Truck? Truck { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
+
+        // Navigation Properties
+        public virtual ICollection<DriverDocument> Documents { get; set; } = new List<DriverDocument>();
+        public virtual ICollection<DriverCertification> Certifications { get; set; } = new List<DriverCertification>();
+        public virtual ICollection<DriverPerformance> Performances { get; set; } = new List<DriverPerformance>();
+        public virtual ICollection<DriverSchedule> Schedules { get; set; } = new List<DriverSchedule>();
+        public virtual ICollection<DriverRestPeriod> RestPeriods { get; set; } = new List<DriverRestPeriod>();
+        public virtual DriverRoutePreference? RoutePreferences { get; set; }
     }
 }

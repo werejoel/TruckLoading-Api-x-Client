@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TruckLoadingApp.Domain.Models;
 
@@ -14,6 +14,14 @@ namespace TruckLoadingApp.Infrastructure.Data
                 .IsRequired()
                 .HasMaxLength(50);
 
+            builder.Property(d => d.FirstName)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            builder.Property(d => d.LastName)
+                .IsRequired()
+                .HasMaxLength(50);
+
             builder.Property(d => d.SafetyRating)
                 .HasColumnType("decimal(3, 2)");
 
@@ -23,10 +31,9 @@ namespace TruckLoadingApp.Infrastructure.Data
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(t => t.Truck)
-                .WithOne(d => d.AssignedDriver)
+            builder.HasOne(d => d.Truck)
+                .WithOne(t => t.AssignedDriver) //Connect to the `AssignedDriver` prop in the truck
                 .HasForeignKey<Driver>(d => d.TruckId)
-                .IsRequired(false)  // Make this explicit
                 .OnDelete(DeleteBehavior.SetNull);
         }
     }

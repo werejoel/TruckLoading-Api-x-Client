@@ -1,9 +1,10 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
+using TruckLoadingApp.Domain.Models;
 
 namespace TruckLoadingApp.API.Services
 {
-    public class TruckLocationService
+    public class TruckLocationService : ITruckLocationService
     {
         private readonly IDistributedCache _cache;
         private const string TRUCK_LOCATION_KEY = "TruckLocation_";
@@ -34,6 +35,24 @@ namespace TruckLoadingApp.API.Services
         public async Task<string?> GetTruckLocationAsync(int truckId)
         {
             return await _cache.GetStringAsync(TRUCK_LOCATION_KEY + truckId);
+        }
+
+        // Implement the interface method
+        public async Task<TruckLocation?> GetCurrentTruckLocationAsync(long truckId)
+        {
+            var locationJson = await _cache.GetStringAsync(TRUCK_LOCATION_KEY + truckId);
+            if (string.IsNullOrEmpty(locationJson))
+                return null;
+
+            var locationData = JsonConvert.DeserializeObject<dynamic>(locationJson);
+            
+            return new TruckLocation
+            {
+                TruckId = (int)truckId,
+                CurrentLatitude = locationData.Latitude,
+                CurrentLongitude = locationData.Longitude,
+                Timestamp = locationData.Timestamp
+            };
         }
 
         // ✅ Retrieve Truck History

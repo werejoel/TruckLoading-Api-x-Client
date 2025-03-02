@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using TruckLoadingApp.API.Configuration;
 using TruckLoadingApp.API.Models.Requests;
 using TruckLoadingApp.Domain.Models;
 using TruckLoadingApp.Infrastructure.Data;
@@ -84,6 +86,9 @@ namespace TruckLoadingApp.API.Controllers
 
                 // Update user properties from the model
                 user.CompanyName = model.CompanyName;
+                user.CompanyAddress = model.CompanyAddress;
+                user.CompanyRegistrationNumber = model.CompanyRegistrationNumber;
+                user.CompanyContact = model.CompanyContact;
 
                 // Save the changes
                 var result = await _userManager.UpdateAsync(user);

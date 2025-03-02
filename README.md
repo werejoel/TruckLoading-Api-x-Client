@@ -8,6 +8,8 @@ TruckLoading-Api-x-Client is a C# based application designed to facilitate and o
 - **API Integration:** Seamless integration with other systems via API endpoints.
 - **User Management:** Manage users and their roles in the loading process.
 - **Data Analytics:** Generate reports and analytics on loading operations and efficiency.
+- **Driver Management:** Comprehensive driver tracking, compliance, and scheduling system.
+- **Recurring Schedules:** Create and manage recurring driver schedules with advanced compliance validation.
 
 ## Installation
 
@@ -53,10 +55,53 @@ To set up the project locally, follow these steps:
 - **GET /api/users:** List all users.
 - **POST /api/users:** Create a new user.
 
+#### Driver Schedule Endpoints
+- **GET /api/driverschedule/{scheduleId}:** Get a specific schedule by ID.
+- **GET /api/driverschedule/driver/{driverId}:** Get a driver's schedules for a specific date range.
+- **GET /api/driverschedule/driver/{driverId}/recurring:** Get all recurring schedules for a driver.
+- **GET /api/driverschedule/recurring/{recurringScheduleId}/instances:** Get all instances of a recurring schedule.
+- **POST /api/driverschedule:** Create a new schedule.
+- **POST /api/driverschedule/recurring:** Create a new recurring schedule.
+- **PUT /api/driverschedule/{scheduleId}:** Update an existing schedule.
+- **PUT /api/driverschedule/recurring/{scheduleId}:** Update a recurring schedule.
+- **DELETE /api/driverschedule/{scheduleId}:** Delete a schedule.
+- **DELETE /api/driverschedule/recurring/{scheduleId}:** Delete a recurring schedule.
+- **GET /api/driverschedule/available:** Get available drivers for a time slot.
+- **GET /api/driverschedule/driver/{driverId}/available:** Check if a driver is available for a time slot.
+
+### Recurring Schedules
+
+The system supports creating recurring driver schedules with the following patterns:
+- **Daily:** Schedule repeats every day
+- **Weekly:** Schedule repeats every week on the same day
+- **Bi-Weekly:** Schedule repeats every two weeks on the same day
+- **Monthly:** Schedule repeats every month on the same day
+
+All recurring schedules undergo advanced compliance validation to ensure:
+- Drivers receive required rest periods
+- Daily driving time limits are not exceeded
+- Continuous driving without breaks is within regulations
+
 ### Example Request
 To get the current loading plan:
 ```bash
 curl -X GET https://yourapiurl.com/api/loading-plan
+```
+
+To create a recurring schedule:
+```bash
+curl -X POST https://yourapiurl.com/api/driverschedule/recurring \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {your_token}" \
+  -d '{
+    "driverId": 1,
+    "startTime": "2023-06-01T08:00:00",
+    "endTime": "2023-06-01T17:00:00",
+    "notes": "Weekly delivery route",
+    "recurrencePattern": 1,
+    "recurrenceEndDate": "2023-08-01T00:00:00",
+    "maxOccurrences": 8
+  }'
 ```
 
 ## Contributing

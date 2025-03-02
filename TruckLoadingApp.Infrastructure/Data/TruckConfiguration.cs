@@ -1,6 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TruckLoadingApp.Domain.Models;
 
 namespace TruckLoadingApp.Infrastructure.Data
 {
@@ -42,6 +41,13 @@ namespace TruckLoadingApp.Infrastructure.Data
                    .WithMany(u => u.Trucks)
                    .HasForeignKey(t => t.OwnerId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            // Define the relationship with Driver properly
+            builder.HasOne(t => t.AssignedDriver)
+                   .WithOne()
+                   .HasForeignKey<Truck>(t => t.AssignedDriverId)
+                   .IsRequired(false)
+                   .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

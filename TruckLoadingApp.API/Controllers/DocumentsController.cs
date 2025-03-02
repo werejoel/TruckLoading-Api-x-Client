@@ -1,7 +1,9 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using TruckLoadingApp.API.Configuration;
 using TruckLoadingApp.Domain.Models;
 using TruckLoadingApp.Infrastructure.Data;
 

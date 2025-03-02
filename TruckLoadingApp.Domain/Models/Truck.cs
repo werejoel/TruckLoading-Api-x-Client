@@ -1,5 +1,3 @@
-﻿using Microsoft.EntityFrameworkCore;
-using NetTopologySuite.Geometries;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using TruckLoadingApp.Domain.Enums;
@@ -55,11 +53,14 @@ public class Truck
 
     public TruckOperationalStatusEnum OperationalStatus { get; set; }
 
-    // 🚀 New Relationship: Driver Assigned to This Truck
+    // Driver Assignment
+    public long? AssignedDriverId { get; set; }
+
+    // Remove the ForeignKey attribute to avoid duplicate relationships
     public Driver? AssignedDriver { get; set; }
 
     [Required]
     [Column(TypeName = "decimal(18,2)")]
     public decimal AvailableCapacityWeight { get; set; }
+    
 }
-
