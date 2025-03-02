@@ -36,7 +36,12 @@ namespace TruckLoadingApp.Application.Services
 
             user.PhoneNumber = request.PhoneNumber;
             user.CompanyName = request.CompanyName;
-            user.TruckOwnerType = (Domain.Enums.TruckOwnerType)request.TruckOwnerType;
+            
+            // Only update TruckOwnerType if it's not null
+            if (request.TruckOwnerType.HasValue)
+            {
+                user.TruckOwnerType = request.TruckOwnerType.Value;
+            }
 
             var result = await _userManager.UpdateAsync(user);
             return result.Succeeded;

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TruckLoadingApp.Domain.Enums
+﻿namespace TruckLoadingApp.Domain.Enums
 {
     public enum LoadStatusEnum
     {
@@ -14,6 +8,8 @@ namespace TruckLoadingApp.Domain.Enums
         PickedUp = 4,
         Delivered = 5,
         Cancelled = 6,
-        Pending = 7
+        Pending = 7,
+        PendingBooking = 8,
+        Draft = 9
     }
 }

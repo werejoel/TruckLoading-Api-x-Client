@@ -1,5 +1,3 @@
-﻿using Microsoft.EntityFrameworkCore;
-using NetTopologySuite.Geometries;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using TruckLoadingApp.Domain.Enums;
@@ -55,11 +53,32 @@ public class Truck
 
     public TruckOperationalStatusEnum OperationalStatus { get; set; }
 
-    // 🚀 New Relationship: Driver Assigned to This Truck
+    // Driver Assignment
+    public long? AssignedDriverId { get; set; }
+
+    // Remove the ForeignKey attribute to avoid duplicate relationships
     public Driver? AssignedDriver { get; set; }
 
     [Required]
     [Column(TypeName = "decimal(18,2)")]
     public decimal AvailableCapacityWeight { get; set; }
+    
+    // Non-mapped properties for route matching
+    [NotMapped]
+    public decimal DistanceToPickup { get; set; }
+    
+    [NotMapped]
+    public decimal RouteDistance { get; set; }
+    
+    // Additional properties for truck details
+    public string RegistrationNumber { get; set; } = string.Empty;
+    public decimal VolumeCapacity { get; set; }
+    public bool HasRefrigeration { get; set; }
+    public bool HasLiftgate { get; set; }
+    public bool HasLoadingRamp { get; set; }
+    public bool CanTransportHazardousMaterials { get; set; }
+    public string? HazardousMaterialsClasses { get; set; }
+    public string? CompanyName { get; set; }
+    public string? CompanyPhoneNumber { get; set; }
+    public double? CompanyRating { get; set; }
 }
-

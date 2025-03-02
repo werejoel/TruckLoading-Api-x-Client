@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TruckLoadingApp.Domain.Enums
+﻿namespace TruckLoadingApp.Domain.Enums
 {
     /// <summary>
     /// Represents the different types of users in the system.

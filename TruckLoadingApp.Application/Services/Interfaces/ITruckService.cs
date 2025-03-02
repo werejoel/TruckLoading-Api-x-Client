@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TruckLoadingApp.Application.Services.Interfaces
+﻿namespace TruckLoadingApp.Application.Services.Interfaces
 {
     public interface ITruckService
     {
@@ -12,7 +6,14 @@ namespace TruckLoadingApp.Application.Services.Interfaces
         Task<IEnumerable<Truck>> GetUnapprovedTrucks();
         Task<bool> ApproveTruck(int truckId);
         Task<Truck?> GetTruckById(int truckId);
-        // 🚀 Add missing method
         Task<Truck?> GetTruckByOwnerId(string ownerId);
+        
+        // Add methods used by TruckController
+        Task<IEnumerable<Truck>> GetAllTrucksAsync();
+        Task<Truck?> GetTruckByIdAsync(long id);
+        Task<Truck> CreateTruckAsync(Truck truck);
+        Task<bool> UpdateTruckAsync(Truck truck);
+        Task<bool> DeleteTruckAsync(long id);
+        Task<IEnumerable<Truck>> GetAvailableTrucksAsync();
     }
 }

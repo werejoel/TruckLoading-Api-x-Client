@@ -1,0 +1,3 @@
+namespace TruckLoadingApp.Domain.Models
+{
+}

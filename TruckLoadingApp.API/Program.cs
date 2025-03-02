@@ -1,19 +1,27 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
+using TruckLoadingApp.API.Configuration;
 using TruckLoadingApp.API.Services;
 using TruckLoadingApp.Application.Services;
+using TruckLoadingApp.Application.Services.Administration;
+using TruckLoadingApp.Application.Services.Administration.Interfaces;
+using TruckLoadingApp.Application.Services.Authentication;
+using TruckLoadingApp.Application.Services.Authentication.Interfaces;
+using TruckLoadingApp.Application.Services.DriverManagement;
+using TruckLoadingApp.Application.Services.DriverManagement.Interfaces;
 using TruckLoadingApp.Application.Services.Interfaces;
 using TruckLoadingApp.Domain.Enums;
 using TruckLoadingApp.Domain.Models;
 using TruckLoadingApp.Infrastructure.Data;
-using System.Security.Claims;
-using Asp.Versioning;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +38,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         sqlOptions => sqlOptions.MigrationsAssembly("TruckLoadingApp.Infrastructure").UseNetTopologySuite()
     )
 );
+
+// Add rate limiting
+builder.Services.AddCustomRateLimiting(builder.Configuration);
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -118,7 +129,10 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:5094",
             "https://localhost:5049",
-            "http://localhost:7094"
+            "http://localhost:7094",
+            "http://localhost:5174",
+            "http://localhost:5173",
+            "https://localhost:7021"
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -127,17 +141,38 @@ builder.Services.AddCors(options =>
 });
 
 // Register Services
+builder.Services.AddScoped<IUserActivityService, UserActivityService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IPricingService, PricingService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSingleton<TruckLocationService>();
+builder.Services.AddSingleton<ITruckLocationService, TruckLocationService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IUserLocationService, UserLocationService>();
-builder.Services.AddScoped<ITruckService, TruckService>(); 
+builder.Services.AddScoped<ITruckService, TruckService>();
+builder.Services.AddScoped<ITruckTypeService, TruckTypeService>();
+builder.Services.AddScoped<ITruckHistoryService, TruckHistoryService>();
 builder.Services.AddScoped<IDriverService, DriverService>();
-builder.Services.AddScoped<IUserLocationService, UserLocationService>();
 builder.Services.AddScoped<ILoadService, LoadService>();
+builder.Services.AddScoped<ILoadTagService, LoadTagService>();
+builder.Services.AddScoped<ILoadTemperatureService, LoadTemperatureService>();
+builder.Services.AddScoped<IDriverPerformanceService, DriverPerformanceService>();
+builder.Services.AddScoped<IDriverDocumentService, DriverDocumentService>();
+builder.Services.AddScoped<IShipperService, ShipperService>();
+builder.Services.AddScoped<ITruckRouteService, TruckRouteService>();
+
+// Add Authentication Services
+builder.Services.AddScoped<TruckLoadingApp.Application.Services.Authentication.Interfaces.IAuthService, TruckLoadingApp.Application.Services.Authentication.AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+// Add ComplianceCheckerService first to break circular dependency
+builder.Services.AddScoped<ComplianceCheckerService>();
+// Then register services that depend on it
+builder.Services.AddScoped<IDriverComplianceService, DriverComplianceService>();
+builder.Services.AddScoped<IDriverPayrollService, DriverPayrollService>();
+builder.Services.AddScoped<IDriverRoutePreferenceService, DriverRoutePreferenceService>();
+builder.Services.AddScoped<IDriverScheduleService, DriverScheduleService>();
 
 // Authorization Configuration
 builder.Services.AddAuthorization();
@@ -172,6 +207,9 @@ builder.Services.AddSwaggerGen(c =>
         Description = "API for Truck Loading Application"
     });
 
+    // Configure Swagger to handle file uploads
+    c.OperationFilter<SwaggerFileOperationFilter>();
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -197,6 +235,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
 
 
 var app = builder.Build();
@@ -231,6 +270,7 @@ using (var scope = app.Services.CreateScope())
 app.UseCors("AllowBlazorClient");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter(); // Add rate limiting middleware
 app.MapControllers();
 
 await app.RunAsync();

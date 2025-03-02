@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TruckLoadingApp.Domain.Models;
 
@@ -31,6 +31,10 @@ namespace TruckLoadingApp.Infrastructure.Data
 
             builder.Property(t => t.AvailableCapacityWeight)
                 .HasColumnType("decimal(18,2)");
+                
+            // Add configuration for VolumeCapacity
+            builder.Property(t => t.VolumeCapacity)
+                .HasColumnType("decimal(18,2)");
 
             // Relationships
             builder.HasOne(t => t.TruckType)
@@ -42,6 +46,13 @@ namespace TruckLoadingApp.Infrastructure.Data
                    .WithMany(u => u.Trucks)
                    .HasForeignKey(t => t.OwnerId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            // Define the relationship with Driver properly
+            builder.HasOne(t => t.AssignedDriver)
+                   .WithOne()
+                   .HasForeignKey<Truck>(t => t.AssignedDriverId)
+                   .IsRequired(false)
+                   .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

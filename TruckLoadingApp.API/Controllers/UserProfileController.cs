@@ -2,12 +2,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using TruckLoadingApp.API.Configuration;
 using TruckLoadingApp.API.Models.Requests;
 using TruckLoadingApp.Application.Services.Interfaces;
 using TruckLoadingApp.Domain.Models;
 
 namespace TruckLoadingApp.API.Controllers
 {
+   
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]

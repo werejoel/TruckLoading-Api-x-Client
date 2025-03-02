@@ -1,14 +1,16 @@
-﻿
-
-using TruckLoadingApp.Domain.Models;
+﻿using TruckLoadingApp.Domain.Models;
 
 namespace TruckLoadingApp.Application.Services.Interfaces
 {
     public interface ILoadService
     {
-        Task<bool> CreateLoad(Load load);
-        Task<Load?> GetLoadById(long loadId);
-        Task<IEnumerable<Load>> GetAllLoads();
-        Task<bool> CancelLoad(long loadId);
+        Task<IEnumerable<Load>> GetAllLoadsAsync();
+        Task<Load?> GetLoadByIdAsync(long id);
+        Task<Load> CreateLoadAsync(Load load);
+        Task<bool> UpdateLoadAsync(Load load);
+        Task<bool> DeleteLoadAsync(long id);
+        Task<bool> CancelLoadAsync(long loadId);
+        Task<IEnumerable<Load>> GetLoadsByStatusAsync(string status);
+        Task<bool> AssignTruckToLoadAsync(long loadId, long truckId);
     }
 }

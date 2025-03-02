@@ -1,10 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TruckLoadingApp.Domain.Enums;
 
 namespace TruckLoadingApp.Domain.Models
@@ -35,11 +30,14 @@ namespace TruckLoadingApp.Domain.Models
         [Required]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
+        // Authentication-related properties
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
+
         // One-to-One Relationship with ContactDetails
         public ContactDetails? ContactDetails { get; set; }
 
         // One-to-Many Relationship: A Trucker or Company can have multiple Trucks
         public List<Truck>? Trucks { get; set; }
     }
-
 }
