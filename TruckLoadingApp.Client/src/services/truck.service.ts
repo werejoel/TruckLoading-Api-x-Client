@@ -2,21 +2,21 @@ import api from './api';
 import { Truck, TruckRegistrationRequest } from '../types/truck.types';
 
 class TruckService {
-  // Get all trucks for the company
+  // Get all trucks for the current user
   async getCompanyTrucks(): Promise<Truck[]> {
-    const response = await api.get<Truck[]>('/company/trucks');
+    const response = await api.get<Truck[]>('/truck');
     return response.data;
   }
 
   // Register a new truck
   async registerTruck(truckData: TruckRegistrationRequest): Promise<{ message: string, truckId: number }> {
-    const response = await api.post('/company/register-truck', truckData);
+    const response = await api.post('/truck/register', truckData);
     return response.data;
   }
 
   // Get a truck by ID
   async getTruckById(id: number): Promise<Truck> {
-    const response = await api.get<Truck>(`/company/trucks/${id}`);
+    const response = await api.get<Truck>(`/truck/${id}`);
     return response.data;
   }
 

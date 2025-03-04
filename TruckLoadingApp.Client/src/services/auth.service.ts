@@ -199,6 +199,12 @@ class AuthService {
     const roles = this.getCurrentUserRoles();
     return roles.includes(role);
   }
+
+  // Verify if the current token is valid
+  async verifyToken(): Promise<boolean> {
+    await api.get('/auth/verify');
+    return true;
+  }
 }
 
 export default new AuthService(); 

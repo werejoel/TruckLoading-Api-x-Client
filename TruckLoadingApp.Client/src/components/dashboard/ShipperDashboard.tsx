@@ -23,7 +23,9 @@ const ShipperDashboard: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching loads for user:', user?.id);
       const data = await shipperService.getLoads();
+      console.log('Received loads:', data);
       setLoads(data);
     } catch (err: any) {
       console.error('Error fetching loads:', err);
@@ -43,7 +45,9 @@ const ShipperDashboard: React.FC = () => {
       setLoading(true);
       setError(null);
       setSelectedLoad(load);
+      console.log(`Finding trucks for load ID ${load.id} within ${maxDistance}km`);
       const trucks = await shipperService.getMatchingTrucksForLoad(load.id, maxDistance);
+      console.log(`Found ${trucks.length} matching trucks`);
       setMatchingTrucks(trucks);
       setActiveTab('matching-trucks');
     } catch (err: any) {
@@ -88,25 +92,28 @@ const ShipperDashboard: React.FC = () => {
   const formatDuration = (duration: string | undefined) => {
     if (!duration) return 'N/A';
     
-    // Parse ISO 8601 duration format
-    const matches = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-    if (!matches) return duration;
-    
-    const hours = matches[1] ? parseInt(matches[1]) : 0;
-    const minutes = matches[2] ? parseInt(matches[2]) : 0;
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else {
-      return `${minutes}m`;
+    // Parse ISO 8601 duration format like "PT1H30M" or simple hours:minutes format
+    if (duration.includes('PT')) {
+      const hoursMatch = duration.match(/(\d+)H/);
+      const minutesMatch = duration.match(/(\d+)M/);
+      
+      const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+      const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
+      
+      if (hours > 0 && minutes > 0) {
+        return `${hours}h ${minutes}m`;
+      } else if (hours > 0) {
+        return `${hours}h`;
+      } else if (minutes > 0) {
+        return `${minutes}m`;
+      }
     }
+    
+    return duration;
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Shipper Dashboard</h1>
-      
-      {/* Tabs */}
+    <div className="container mx-auto px-4 py-6">
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
           <button
@@ -245,7 +252,7 @@ const ShipperDashboard: React.FC = () => {
                             <div className="sm:flex">
                               <p className="flex items-center text-sm text-gray-500">
                                 <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
+                                  <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000 16zm0 14a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
                                 </svg>
                                 {load.weight} kg
                               </p>
@@ -260,9 +267,9 @@ const ShipperDashboard: React.FC = () => {
                               <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                               </svg>
-                              <p>
-                                Pickup: {formatDateTime(load.pickupDate)}
-                              </p>
+                              <span>
+                                {formatDateTime(load.pickupDate)}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -418,7 +425,7 @@ const ShipperDashboard: React.FC = () => {
                             <div className="sm:flex sm:space-x-4">
                               <div className="flex items-center text-sm text-gray-500">
                                 <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
+                                  <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000 16zm0 14a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
                                 </svg>
                                 Capacity: {truck.availableCapacityWeight} / {truck.loadCapacityWeight} kg
                               </div>
@@ -476,4 +483,4 @@ const ShipperDashboard: React.FC = () => {
   );
 };
 
-export default ShipperDashboard; 
+export default ShipperDashboard;

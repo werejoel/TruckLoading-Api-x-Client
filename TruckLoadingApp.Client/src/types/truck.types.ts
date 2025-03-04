@@ -1,7 +1,23 @@
+export interface TruckCategory {
+  id: number;
+  categoryName: string;
+  isActive: boolean;
+}
+
+export interface TruckType {
+  id: number;
+  name: string;
+  description?: string;
+  categoryId: number;
+  category?: TruckCategory;
+  isActive: boolean;
+}
+
 export interface Truck {
   id: number;
   numberPlate: string;
-  truckType: string;
+  truckTypeId: number;
+  truckType?: TruckType;
   loadCapacityWeight: number;
   loadCapacityVolume: number;
   height?: number;
@@ -27,9 +43,4 @@ export interface TruckRegistrationRequest {
   length?: number;
   availabilityStartDate: Date;
   availabilityEndDate: Date;
-}
-
-export interface TruckType {
-  id: number;
-  name: string;
 } 

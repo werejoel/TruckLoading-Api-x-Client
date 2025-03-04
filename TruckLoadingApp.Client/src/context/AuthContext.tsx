@@ -6,6 +6,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   loading: boolean;
+  error: string | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   registerShipper: (email: string, password: string, confirmPassword: string, firstName: string, lastName: string) => Promise<void>;
@@ -32,27 +33,58 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Check if user is already logged in on component mount
   useEffect(() => {
-    const checkAuth = () => {
-      const isLoggedIn = authService.isLoggedIn();
-      setIsAuthenticated(isLoggedIn);
-      
-      if (isLoggedIn) {
-        // Get user data from localStorage
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          try {
-            const userData = JSON.parse(userStr);
-            setUser(userData as User);
-          } catch (error) {
-            console.error('Error parsing user data:', error);
+    const checkAuth = async () => {
+      try {
+        console.log('Checking authentication status...');
+        const isLoggedIn = authService.isLoggedIn();
+        console.log('Is logged in:', isLoggedIn);
+        
+        if (isLoggedIn) {
+          // Get user data from localStorage
+          const userStr = localStorage.getItem('user');
+          console.log('User data from localStorage:', userStr);
+          
+          if (userStr) {
+            try {
+              const userData = JSON.parse(userStr);
+              console.log('Parsed user data:', userData);
+              
+              // Verify token is still valid
+              const token = localStorage.getItem('token');
+              if (token) {
+                try {
+                  // Make a test request to verify token
+                  await authService.verifyToken();
+                  setUser(userData as User);
+                  setIsAuthenticated(true);
+                  setError(null);
+                } catch (error: unknown) {
+                  console.error('Token verification failed:', error instanceof Error ? error.message : 'Unknown error');
+                  // Token is invalid, clear everything
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('refreshToken');
+                  localStorage.removeItem('user');
+                  setIsAuthenticated(false);
+                  setUser(null);
+                  setError('Session expired. Please login again.');
+                }
+              }
+            } catch (error: unknown) {
+              console.error('Error parsing user data:', error instanceof Error ? error.message : 'Unknown error');
+              setError('Error loading user data. Please login again.');
+            }
           }
         }
+      } catch (error: unknown) {
+        console.error('Error during auth check:', error instanceof Error ? error.message : 'Unknown error');
+        setError('Error checking authentication status.');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
     
     checkAuth();
@@ -242,6 +274,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     user,
     loading,
+    error,
     login,
     logout,
     registerShipper,
@@ -251,4 +284,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}; 
+};
+
+export default AuthContext; 

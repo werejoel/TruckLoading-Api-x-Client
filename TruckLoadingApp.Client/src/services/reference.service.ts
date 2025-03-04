@@ -1,18 +1,11 @@
 import api from './api';
+import { TruckType, TruckCategory } from '../types/truck.types';
 
 // Type definitions for reference data
 export interface LoadType {
   id: number;
   name: string;
   description?: string;
-}
-
-export interface TruckType {
-  id: number;
-  name: string;
-  description?: string;
-  maxWeight?: number;
-  maxVolume?: number;
 }
 
 export interface LoadTag {
@@ -45,15 +38,66 @@ class ReferenceService {
     return response.data;
   }
 
+  // Truck categories
+  async getTruckCategories(): Promise<TruckCategory[]> {
+    try {
+      console.log('Fetching truck categories...');
+      const response = await api.get<TruckCategory[]>('/reference/truck-categories');
+      console.log('Received truck categories:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching truck categories:', error);
+      throw error;
+    }
+  }
+
+  async getTruckCategoryById(id: number): Promise<TruckCategory> {
+    try {
+      console.log(`Fetching truck category ${id}...`);
+      const response = await api.get<TruckCategory>(`/reference/truck-categories/${id}`);
+      console.log('Received truck category:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching truck category ${id}:`, error);
+      throw error;
+    }
+  }
+
   // Truck types
   async getTruckTypes(): Promise<TruckType[]> {
-    const response = await api.get<TruckType[]>('/reference/truck-types');
-    return response.data;
+    try {
+      console.log('Fetching all truck types...');
+      const response = await api.get<TruckType[]>('/reference/truck-types');
+      console.log('Received truck types:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching truck types:', error);
+      throw error;
+    }
+  }
+
+  async getTruckTypesByCategory(categoryId: number): Promise<TruckType[]> {
+    try {
+      console.log(`Fetching truck types for category ${categoryId}...`);
+      const response = await api.get<TruckType[]>(`/reference/truck-categories/${categoryId}/types`);
+      console.log('Received truck types:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching truck types for category ${categoryId}:`, error);
+      throw error;
+    }
   }
 
   async getTruckTypeById(id: number): Promise<TruckType> {
-    const response = await api.get<TruckType>(`/reference/truck-types/${id}`);
-    return response.data;
+    try {
+      console.log(`Fetching truck type ${id}...`);
+      const response = await api.get<TruckType>(`/reference/truck-types/${id}`);
+      console.log('Received truck type:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching truck type ${id}:`, error);
+      throw error;
+    }
   }
 
   // Load tags

@@ -11,6 +11,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: #334155;
   overflow-x: hidden;
+  @apply bg-gray-50;
 }
 
 code {
@@ -155,4 +156,25 @@ button:not(:disabled):active {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Form styles */
+input[type="text"],
+input[type="date"],
+input[type="number"],
+textarea {
+  @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm;
+}
+
+/* Button styles */
+.btn {
+  @apply inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500;
+}
+
+.btn-secondary {
+  @apply text-gray-700 bg-white border-gray-300 hover:bg-gray-50 focus:ring-blue-500;
 }

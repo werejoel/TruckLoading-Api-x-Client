@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { FaTruck, FaBox, FaUser, FaCog, FaSignOutAlt, FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar: React.FC = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, hasRole } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -12,151 +14,105 @@ const Navbar: React.FC = () => {
     navigate('/login');
   };
 
+  const isActive = (path: string) => location.pathname === path;
+
+  const getNavItems = () => {
+    if (hasRole('Shipper')) {
+      return [
+        { name: 'Dashboard', href: '/shipper/dashboard' },
+        { name: 'My Loads', href: '/loads' },
+        { name: 'Create Load', href: '/loads/create' },
+        { name: 'Search Trucks', href: '/search-trucks' }
+      ];
+    }
+    if (hasRole('Trucker')) {
+      return [
+        { name: 'Dashboard', href: '/trucker/dashboard' },
+        { name: 'Available Loads', href: '/available-loads' },
+        { name: 'My Deliveries', href: '/my-deliveries' },
+        { name: 'Register Truck', href: '/trucker/register-truck' }
+      ];
+    }
+    if (hasRole('Company')) {
+      return [
+        { name: 'Dashboard', href: '/company/dashboard' },
+        { name: 'Drivers', href: '/company/drivers' },
+        { name: 'Trucks', href: '/company/trucks' },
+        { name: 'Analytics', href: '/company/analytics' }
+      ];
+    }
+    return [];
+  };
+
+  const navItems = getNavItems();
+
   return (
     <nav className="bg-white shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link to="/" className="text-xl font-bold text-indigo-600">
-                TruckLoading App
-              </Link>
+              <FaTruck className="h-8 w-8 text-blue-600" />
+              <span className="ml-2 text-xl font-bold text-gray-900">TruckLoading App</span>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {isAuthenticated ? (
-                <>
-                  <Link
-                    to="/dashboard"
-                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                  >
-                    Dashboard
-                  </Link>
-                  {user?.userType === 'Shipper' && (
-                    <>
-                      <Link
-                        to="/shipper/dashboard"
-                        className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                      >
-                        Shipper Dashboard
-                      </Link>
-                      <Link
-                        to="/loads"
-                        className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                      >
-                        My Loads
-                      </Link>
-                      <Link
-                        to="/search-trucks"
-                        className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                      >
-                        Search Trucks
-                      </Link>
-                    </>
-                  )}
-                  {user?.userType === 'Trucker' && (
-                    <>
-                      <Link
-                        to="/my-trucks"
-                        className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                      >
-                        My Trucks
-                      </Link>
-                      <Link
-                        to="/available-loads"
-                        className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                      >
-                        Available Loads
-                      </Link>
-                    </>
-                  )}
-                  {user?.roles?.includes('Admin') && (
-                    <Link
-                      to="/admin/dashboard"
-                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    >
-                      Admin Dashboard
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/register/shipper"
-                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                  >
-                    Register as Shipper
-                  </Link>
-                  <Link
-                    to="/register/trucker"
-                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                  >
-                    Register as Trucker
-                  </Link>
-                </>
-              )}
+              {isAuthenticated && navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={`${
+                    isActive(item.href)
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                >
+                  {item.name}
+                </Link>
+              ))}
             </div>
           </div>
+
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {isAuthenticated ? (
-              <div className="ml-3 relative">
-                <div className="flex items-center">
-                  <span className="text-sm text-gray-700 mr-2">
-                    {user?.firstName} {user?.lastName}
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    className="px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Logout
-                  </button>
-                </div>
+              <div className="ml-3 relative flex items-center space-x-4">
+                <span className="text-sm text-gray-700">
+                  {user?.firstName} {user?.lastName}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <FaSignOutAlt className="mr-2" />
+                  Logout
+                </button>
               </div>
-            ) : null}
+            ) : (
+              <div className="space-x-4">
+                <Link
+                  to="/login"
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register/shipper"
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
           </div>
-          <div className="-mr-2 flex items-center sm:hidden">
+
+          <div className="flex items-center sm:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
             >
-              <span className="sr-only">Open main menu</span>
               {isMenuOpen ? (
-                <svg
-                  className="block h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <FaTimes className="block h-6 w-6" />
               ) : (
-                <svg
-                  className="block h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
+                <FaBars className="block h-6 w-6" />
               )}
             </button>
           </div>
@@ -169,71 +125,26 @@ const Navbar: React.FC = () => {
           <div className="pt-2 pb-3 space-y-1">
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/dashboard"
-                  className="bg-indigo-50 border-indigo-500 text-indigo-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-                {user?.userType === 'Shipper' && (
-                  <>
-                    <Link
-                      to="/shipper/dashboard"
-                      className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Shipper Dashboard
-                    </Link>
-                    <Link
-                      to="/loads"
-                      className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      My Loads
-                    </Link>
-                    <Link
-                      to="/search-trucks"
-                      className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Search Trucks
-                    </Link>
-                  </>
-                )}
-                {user?.userType === 'Trucker' && (
-                  <>
-                    <Link
-                      to="/my-trucks"
-                      className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      My Trucks
-                    </Link>
-                    <Link
-                      to="/available-loads"
-                      className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Available Loads
-                    </Link>
-                  </>
-                )}
-                {user?.roles?.includes('Admin') && (
+                {navItems.map((item) => (
                   <Link
-                    to="/admin/dashboard"
-                    className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                    key={item.href}
+                    to={item.href}
+                    className={`${
+                      isActive(item.href)
+                        ? 'bg-blue-50 border-blue-500 text-blue-700'
+                        : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+                    } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Admin Dashboard
+                    {item.name}
                   </Link>
-                )}
+                ))}
                 <button
                   onClick={() => {
                     handleLogout();
                     setIsMenuOpen(false);
                   }}
-                  className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium w-full text-left"
+                  className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
                 >
                   Logout
                 </button>
@@ -242,24 +153,17 @@ const Navbar: React.FC = () => {
               <>
                 <Link
                   to="/login"
-                  className="bg-indigo-50 border-indigo-500 text-indigo-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                  className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Login
                 </Link>
                 <Link
                   to="/register/shipper"
-                  className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                  className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Register as Shipper
-                </Link>
-                <Link
-                  to="/register/trucker"
-                  className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Register as Trucker
+                  Register
                 </Link>
               </>
             )}

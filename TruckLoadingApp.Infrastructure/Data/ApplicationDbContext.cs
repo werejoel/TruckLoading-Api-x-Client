@@ -13,6 +13,7 @@ namespace TruckLoadingApp.Infrastructure.Data
 
         public DbSet<Truck> Trucks { get; set; }
         public DbSet<TruckType> TruckTypes { get; set; }
+        public DbSet<TruckCategory> TruckCategories { get; set; }
         public DbSet<Load> Loads { get; set; }
         public DbSet<LoadStop> LoadStops { get; set; }
         public DbSet<Booking> Bookings { get; set; }
@@ -58,6 +59,7 @@ namespace TruckLoadingApp.Infrastructure.Data
             builder.ApplyConfiguration(new DriverConfiguration());
             builder.ApplyConfiguration(new BookingConfiguration());
             builder.ApplyConfiguration(new TruckTypeConfiguration());
+            builder.ApplyConfiguration(new TruckCategoryConfiguration());
             builder.ApplyConfiguration(new UserConfiguration());
             builder.ApplyConfiguration(new RouteConfiguration());
             builder.ApplyConfiguration(new WaypointConfiguration());

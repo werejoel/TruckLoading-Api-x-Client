@@ -22,14 +22,21 @@ using TruckLoadingApp.Application.Services.Interfaces;
 using TruckLoadingApp.Domain.Enums;
 using TruckLoadingApp.Domain.Models;
 using TruckLoadingApp.Infrastructure.Data;
+using TruckLoadingApp.Infrastructure.Data.Seeders;
+using TruckLoadingApp.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure services
-builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
-{
-    options.SuppressModelStateInvalidFilter = true; // Prevents automatic 400 responses
-});
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.SuppressModelStateInvalidFilter = true; // Prevents automatic 400 responses
+    });
 
 // Database Configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -156,11 +163,15 @@ builder.Services.AddScoped<ITruckHistoryService, TruckHistoryService>();
 builder.Services.AddScoped<IDriverService, DriverService>();
 builder.Services.AddScoped<ILoadService, LoadService>();
 builder.Services.AddScoped<ILoadTagService, LoadTagService>();
+builder.Services.AddScoped<ILoadTypeService, LoadTypeService>();
 builder.Services.AddScoped<ILoadTemperatureService, LoadTemperatureService>();
 builder.Services.AddScoped<IDriverPerformanceService, DriverPerformanceService>();
 builder.Services.AddScoped<IDriverDocumentService, DriverDocumentService>();
 builder.Services.AddScoped<IShipperService, ShipperService>();
 builder.Services.AddScoped<ITruckRouteService, TruckRouteService>();
+
+// Register Data Seeders
+builder.Services.AddDataSeeders();
 
 // Add Authentication Services
 builder.Services.AddScoped<TruckLoadingApp.Application.Services.Authentication.Interfaces.IAuthService, TruckLoadingApp.Application.Services.Authentication.AuthService>();
@@ -247,18 +258,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Seed Database on Startup
+// Seed Data
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var logger = services.GetRequiredService<ILogger<Program>>();
+
     try
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        var userManager = services.GetRequiredService<UserManager<User>>();
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-
-        await SeedDatabaseAsync(context, userManager, roleManager);
+        await services.SeedDataAsync();
+        logger.LogInformation("Seeding completed successfully.");
     }
     catch (Exception ex)
     {
@@ -272,6 +281,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter(); // Add rate limiting middleware
 app.MapControllers();
+
+app.UseHttpsRedirection();
 
 await app.RunAsync();
 

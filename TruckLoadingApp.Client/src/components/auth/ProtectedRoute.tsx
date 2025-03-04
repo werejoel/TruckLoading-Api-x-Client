@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 interface ProtectedRouteProps {
   requiredRole?: string;
+  children?: ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRole }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRole, children }) => {
   const { isAuthenticated, loading, hasRole } = useAuth();
 
   // Show loading indicator while checking authentication
@@ -24,8 +25,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRole }) => {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // If authenticated and has the required role (if any), render the child routes
-  return <Outlet />;
+  // If children are provided, render them, otherwise render the Outlet
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default ProtectedRoute; 
