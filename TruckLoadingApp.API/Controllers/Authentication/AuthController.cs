@@ -155,6 +155,8 @@ namespace TruckLoadingApp.API.Controllers.Authentication
                         .Select(e => e.ErrorMessage)
                         .ToList();
                     
+                    _logger.LogWarning("Validation failed for trucker registration: {Errors}", string.Join(", ", errors));
+                    
                     return BadRequest(new { 
                         Success = false,
                         Message = "Validation failed",
@@ -162,6 +164,8 @@ namespace TruckLoadingApp.API.Controllers.Authentication
                     });
                 }
 
+                _logger.LogInformation("Attempting to register trucker with username {Username}", registerDto.Username);
+                
                 var result = await _authService.RegisterTruckerAsync(registerDto);
                 if (result == null)
                 {

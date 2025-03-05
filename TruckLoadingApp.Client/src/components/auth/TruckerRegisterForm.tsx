@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import referenceService from '../../services/reference.service';
 import { TruckOwnerType } from '../../types/auth.types';
+import { TruckType } from '../../types/truck.types';
 
 // Validation schema
 const TruckerRegisterSchema = Yup.object().shape({
@@ -20,53 +22,72 @@ const TruckerRegisterSchema = Yup.object().shape({
     .required('First name is required'),
   lastName: Yup.string()
     .required('Last name is required'),
-  // Removed truckOwnerType validation as it's now automatically set
+  phoneNumber: Yup.string()
+    .matches(/^[0-9+\- ]+$/, 'Invalid phone number format'),
+  licenseNumber: Yup.string()
+    .required('License number is required'),
+  licenseExpiryDate: Yup.date()
+    .required('License expiry date is required')
+    .min(new Date(), 'License must be valid (not expired)'),
+  experience: Yup.number()
+    .min(0, 'Experience must be a positive number')
+    .nullable(),
+  truckTypeId: Yup.number()
+    .required('Truck type is required'),
 });
 
 const TruckerRegisterForm: React.FC = () => {
   const { registerTrucker } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [truckTypes, setTruckTypes] = useState<TruckType[]>([]);
+
+  useEffect(() => {
+    const fetchTruckTypes = async () => {
+      try {
+        const types = await referenceService.getTruckTypes();
+        setTruckTypes(types);
+      } catch (error) {
+        console.error('Error fetching truck types:', error);
+        setError('Failed to load truck types. Please try again.');
+      }
+    };
+    fetchTruckTypes();
+  }, []);
 
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
       setError(null);
-      // Always use Individual as the truck owner type for individual truckers
       await registerTrucker(
         values.email,
         values.password,
         values.confirmPassword,
         values.firstName,
         values.lastName,
-        TruckOwnerType.Individual // Automatically set to Individual
+        TruckOwnerType.Individual,
+        values.licenseNumber,
+        values.licenseExpiryDate,
+        values.experience ? Number(values.experience) : null,
+        values.phoneNumber
       );
-      navigate('/dashboard'); // Redirect to dashboard after successful registration
+      navigate('/dashboard');
     } catch (err: any) {
       console.error('Registration error:', err);
       
-      // Handle different types of error responses
       if (err.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         const responseData = err.response.data;
         
-        if (responseData.Message) {
-          setError(responseData.Message);
+        if (responseData.message) {
+          setError(responseData.message);
         } else if (responseData.errors) {
-          // Handle validation errors from ASP.NET Core
           const errorMessages = Object.values(responseData.errors).flat();
           setError(errorMessages.join(', '));
-        } else if (responseData.Errors && Array.isArray(responseData.Errors)) {
-          // Handle our custom error format
-          setError(responseData.Errors.join(', '));
         } else {
           setError('Registration failed. Please check your information and try again.');
         }
       } else if (err.request) {
-        // The request was made but no response was received
         setError('No response from server. Please check your internet connection and try again.');
       } else {
-        // Something happened in setting up the request that triggered an Error
         setError('An error occurred during registration. Please try again later.');
       }
     } finally {
@@ -91,7 +112,11 @@ const TruckerRegisterForm: React.FC = () => {
           confirmPassword: '',
           firstName: '',
           lastName: '',
-          // truckOwnerType is no longer needed in the form
+          phoneNumber: '',
+          licenseNumber: '',
+          licenseExpiryDate: '',
+          experience: '',
+          truckTypeId: '',
         }}
         validationSchema={TruckerRegisterSchema}
         onSubmit={handleSubmit}
@@ -110,31 +135,31 @@ const TruckerRegisterForm: React.FC = () => {
               <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
             </div>
             
-            <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                First Name
-              </label>
-              <Field
-                type="text"
-                name="firstName"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <ErrorMessage name="firstName" component="div" className="mt-1 text-sm text-red-600" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                  First Name
+                </label>
+                <Field
+                  type="text"
+                  name="firstName"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <ErrorMessage name="firstName" component="div" className="mt-1 text-sm text-red-600" />
+              </div>
+              
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
+                <Field
+                  type="text"
+                  name="lastName"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                <ErrorMessage name="lastName" component="div" className="mt-1 text-sm text-red-600" />
+              </div>
             </div>
-            
-            <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                Last Name
-              </label>
-              <Field
-                type="text"
-                name="lastName"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <ErrorMessage name="lastName" component="div" className="mt-1 text-sm text-red-600" />
-            </div>
-            
-            {/* Removed the truck owner type selection */}
             
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -160,6 +185,75 @@ const TruckerRegisterForm: React.FC = () => {
               <ErrorMessage name="confirmPassword" component="div" className="mt-1 text-sm text-red-600" />
             </div>
             
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+                Phone Number
+              </label>
+              <Field
+                type="tel"
+                name="phoneNumber"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <ErrorMessage name="phoneNumber" component="div" className="mt-1 text-sm text-red-600" />
+            </div>
+            
+            <div>
+              <label htmlFor="licenseNumber" className="block text-sm font-medium text-gray-700">
+                Driver License Number
+              </label>
+              <Field
+                type="text"
+                name="licenseNumber"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <ErrorMessage name="licenseNumber" component="div" className="mt-1 text-sm text-red-600" />
+            </div>
+            
+            <div>
+              <label htmlFor="licenseExpiryDate" className="block text-sm font-medium text-gray-700">
+                License Expiry Date
+              </label>
+              <Field
+                type="date"
+                name="licenseExpiryDate"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <ErrorMessage name="licenseExpiryDate" component="div" className="mt-1 text-sm text-red-600" />
+            </div>
+            
+            <div>
+              <label htmlFor="experience" className="block text-sm font-medium text-gray-700">
+                Years of Experience
+              </label>
+              <Field
+                type="number"
+                name="experience"
+                min="0"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <ErrorMessage name="experience" component="div" className="mt-1 text-sm text-red-600" />
+            </div>
+
+            <div>
+              <label htmlFor="truckTypeId" className="block text-sm font-medium text-gray-700">
+                Truck Type
+              </label>
+              <Field
+                as="select"
+                name="truckTypeId"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">Select a truck type</option>
+                {truckTypes.map(type => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                    {type.description && ` - ${type.description}`}
+                  </option>
+                ))}
+              </Field>
+              <ErrorMessage name="truckTypeId" component="div" className="mt-1 text-sm text-red-600" />
+            </div>
+
             <div>
               <button
                 type="submit"
@@ -200,4 +294,4 @@ const TruckerRegisterForm: React.FC = () => {
   );
 };
 
-export default TruckerRegisterForm; 
+export default TruckerRegisterForm;

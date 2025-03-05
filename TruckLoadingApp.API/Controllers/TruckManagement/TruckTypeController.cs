@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TruckLoadingApp.Application.Services.Interfaces;
 using TruckLoadingApp.Domain.Models;
-using TruckLoadingApp.Infrastructure.Data;
 
 namespace TruckLoadingApp.API.Controllers.TruckManagement
 {
@@ -18,16 +16,13 @@ namespace TruckLoadingApp.API.Controllers.TruckManagement
     {
         private readonly ITruckTypeService _truckTypeService;
         private readonly ILogger<TruckTypeController> _logger;
-        private readonly ApplicationDbContext _context;
 
         public TruckTypeController(
             ITruckTypeService truckTypeService,
-            ILogger<TruckTypeController> logger,
-            ApplicationDbContext context)
+            ILogger<TruckTypeController> logger)
         {
             _truckTypeService = truckTypeService;
             _logger = logger;
-            _context = context;
         }
 
         [HttpGet]
@@ -35,11 +30,7 @@ namespace TruckLoadingApp.API.Controllers.TruckManagement
         {
             try
             {
-                var truckTypes = await _context.TruckTypes
-                    .Where(tt => tt.IsActive)
-                    .OrderBy(tt => tt.Name)
-                    .ToListAsync();
-                
+                var truckTypes = await _truckTypeService.GetAllTruckTypesAsync();
                 return Ok(truckTypes);
             }
             catch (Exception ex)
@@ -68,76 +59,52 @@ namespace TruckLoadingApp.API.Controllers.TruckManagement
             }
         }
 
-        [HttpPost]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<TruckType>> CreateTruckType([FromBody] TruckType truckType)
+        [HttpGet("categories")]
+        public async Task<ActionResult<IEnumerable<TruckCategory>>> GetAllCategories()
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var result = await _truckTypeService.CreateTruckTypeAsync(truckType);
-                return CreatedAtAction(nameof(GetTruckTypeById), new { id = result.Id }, result);
+                var categories = await _truckTypeService.GetAllTruckCategoriesAsync();
+                return Ok(categories);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating truck type");
-                return StatusCode(500, "An error occurred while creating the truck type");
+                _logger.LogError(ex, "Error retrieving truck categories");
+                return StatusCode(500, new { Message = "An error occurred while retrieving truck categories", Error = ex.Message });
             }
         }
 
-        [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateTruckType(int id, [FromBody] TruckType truckType)
+        [HttpGet("categories/{id}")]
+        public async Task<ActionResult<TruckCategory>> GetCategoryById(int id)
         {
             try
             {
-                if (id != truckType.Id)
-                {
-                    return BadRequest("Truck type ID mismatch");
-                }
-
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var result = await _truckTypeService.UpdateTruckTypeAsync(truckType);
-                if (!result)
+                var category = await _truckTypeService.GetTruckCategoryByIdAsync(id);
+                if (category == null)
                 {
                     return NotFound();
                 }
-
-                return NoContent();
+                return Ok(category);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating truck type with ID {Id}", id);
-                return StatusCode(500, "An error occurred while updating the truck type");
+                _logger.LogError(ex, "Error retrieving truck category with ID {Id}", id);
+                return StatusCode(500, "An error occurred while retrieving the truck category");
             }
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteTruckType(int id)
+        [HttpGet("by-category/{categoryId}")]
+        public async Task<ActionResult<IEnumerable<TruckType>>> GetTruckTypesByCategory(int categoryId)
         {
             try
             {
-                var result = await _truckTypeService.DeleteTruckTypeAsync(id);
-                if (!result)
-                {
-                    return NotFound();
-                }
-
-                return NoContent();
+                var truckTypes = await _truckTypeService.GetTruckTypesByCategoryIdAsync(categoryId);
+                return Ok(truckTypes);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting truck type with ID {Id}", id);
-                return StatusCode(500, "An error occurred while deleting the truck type");
+                _logger.LogError(ex, "Error retrieving truck types for category ID {CategoryId}", categoryId);
+                return StatusCode(500, "An error occurred while retrieving the truck types");
             }
         }
     }

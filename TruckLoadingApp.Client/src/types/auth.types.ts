@@ -12,9 +12,10 @@ export enum TruckOwnerType {
 
 // Base registration interface with common fields
 export interface BaseRegisterRequest {
+  username: string;
   email: string;
   password: string;
-  confirmPassword?: string; // Optional for backward compatibility
+  confirmPassword?: string;
   firstName: string;
   lastName: string;
   userType: UserType;
@@ -29,6 +30,10 @@ export interface ShipperRegisterRequest extends BaseRegisterRequest {
 export interface TruckerRegisterRequest extends BaseRegisterRequest {
   userType: UserType.Trucker;
   truckOwnerType: TruckOwnerType;
+  licenseNumber: string;
+  licenseExpiryDate: string | Date;
+  experience?: number;
+  phoneNumber?: string;
 }
 
 // Company-specific registration interface
@@ -71,4 +76,4 @@ export interface User {
   phoneNumber?: string;
   roles: string[];
   createdDate: string;
-} 
+}

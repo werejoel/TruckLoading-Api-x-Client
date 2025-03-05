@@ -6,8 +6,8 @@ namespace TruckLoadingApp.Application.Services.Interfaces
     {
         Task<IEnumerable<TruckType>> GetAllTruckTypesAsync();
         Task<TruckType?> GetTruckTypeByIdAsync(int id);
-        Task<TruckType> CreateTruckTypeAsync(TruckType truckType);
-        Task<bool> UpdateTruckTypeAsync(TruckType truckType);
-        Task<bool> DeleteTruckTypeAsync(int id);
+        Task<IEnumerable<TruckCategory>> GetAllTruckCategoriesAsync();
+        Task<TruckCategory?> GetTruckCategoryByIdAsync(int id);
+        Task<IEnumerable<TruckType>> GetTruckTypesByCategoryIdAsync(int categoryId);
     }
 } 

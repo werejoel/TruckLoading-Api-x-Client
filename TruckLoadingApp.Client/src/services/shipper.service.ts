@@ -1,5 +1,6 @@
 import api from './api';
 import { UserType } from '../types/auth.types';
+import { GoodsTypeEnum } from '../models/enums';
 
 // Type definitions for Load
 export interface Load {
@@ -12,7 +13,7 @@ export interface Load {
   pickupDate: Date;
   deliveryDate: Date;
   specialRequirements?: string;
-  goodsType: string;
+  goodsType: GoodsTypeEnum;
   loadTypeId: number;
   loadType?: { id: number; name: string };
   price?: number;
@@ -51,7 +52,7 @@ export interface LoadCreateRequest {
   pickupDate: Date;
   deliveryDate: Date;
   specialRequirements?: string;
-  goodsType: string;
+  goodsType: GoodsTypeEnum;
   loadTypeId: number;
   price?: number;
   currency?: string;
@@ -67,6 +68,12 @@ export interface LoadCreateRequest {
   unNumber?: string;
   requiresCustomsDeclaration: boolean;
   customsDeclarationNumber?: string;
+  pickupAddress?: string;
+  pickupLatitude?: number;
+  pickupLongitude?: number;
+  deliveryAddress?: string;
+  deliveryLatitude?: number;
+  deliveryLongitude?: number;
 }
 
 export interface LoadUpdateRequest extends LoadCreateRequest {}

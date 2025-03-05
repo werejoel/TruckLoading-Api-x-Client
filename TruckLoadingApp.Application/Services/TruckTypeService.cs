@@ -20,49 +20,42 @@ namespace TruckLoadingApp.Application.Services
         public async Task<IEnumerable<TruckType>> GetAllTruckTypesAsync()
         {
             return await _context.TruckTypes
+                .Include(tt => tt.Category)
                 .Where(tt => tt.IsActive)
-                .OrderBy(tt => tt.Name)
+                .OrderBy(tt => tt.Category.CategoryName)
+                .ThenBy(tt => tt.Name)
                 .ToListAsync();
         }
 
         public async Task<TruckType?> GetTruckTypeByIdAsync(int id)
         {
             return await _context.TruckTypes
+                .Include(tt => tt.Category)
                 .FirstOrDefaultAsync(tt => tt.Id == id && tt.IsActive);
         }
 
-        public async Task<TruckType> CreateTruckTypeAsync(TruckType truckType)
+        public async Task<IEnumerable<TruckCategory>> GetAllTruckCategoriesAsync()
         {
-            truckType.CreatedDate = DateTime.UtcNow;
-            truckType.IsActive = true;
-            
-            _context.TruckTypes.Add(truckType);
-            await _context.SaveChangesAsync();
-            
-            return truckType;
+            return await _context.TruckCategories
+                .Where(tc => tc.IsActive)
+                .OrderBy(tc => tc.CategoryName)
+                .ToListAsync();
         }
 
-        public async Task<bool> UpdateTruckTypeAsync(TruckType truckType)
+        public async Task<TruckCategory?> GetTruckCategoryByIdAsync(int id)
         {
-            var existingTruckType = await _context.TruckTypes.FindAsync(truckType.Id);
-            if (existingTruckType == null || !existingTruckType.IsActive) return false;
-            
-            existingTruckType.Name = truckType.Name;
-            existingTruckType.UpdatedDate = DateTime.UtcNow;
-            
-            return await _context.SaveChangesAsync() > 0;
+            return await _context.TruckCategories
+                .Include(tc => tc.TruckTypes.Where(tt => tt.IsActive))
+                .FirstOrDefaultAsync(tc => tc.Id == id && tc.IsActive);
         }
 
-        public async Task<bool> DeleteTruckTypeAsync(int id)
+        public async Task<IEnumerable<TruckType>> GetTruckTypesByCategoryIdAsync(int categoryId)
         {
-            var truckType = await _context.TruckTypes.FindAsync(id);
-            if (truckType == null) return false;
-            
-            // Soft delete
-            truckType.IsActive = false;
-            truckType.UpdatedDate = DateTime.UtcNow;
-            
-            return await _context.SaveChangesAsync() > 0;
+            return await _context.TruckTypes
+                .Include(tt => tt.Category)
+                .Where(tt => tt.CategoryId == categoryId && tt.IsActive)
+                .OrderBy(tt => tt.Name)
+                .ToListAsync();
         }
     }
 } 
