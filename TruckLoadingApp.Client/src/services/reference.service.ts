@@ -26,6 +26,18 @@ export interface Currency {
   symbol: string;
 }
 
+// Interface for the enhanced truck category response from the API
+interface TruckCategoryWithTypes {
+  categoryId: number;
+  categoryName: string;
+  isActive: boolean;
+  truckTypes: Array<{
+    id: number;
+    name: string;
+    categoryId: number;
+  }>;
+}
+
 class ReferenceService {
   // Load types
   async getLoadTypes(): Promise<LoadType[]> {
@@ -42,9 +54,29 @@ class ReferenceService {
   async getTruckCategories(): Promise<TruckCategory[]> {
     try {
       console.log('Fetching truck categories...');
-      const response = await api.get<TruckCategory[]>('/reference/truck-categories');
-      console.log('Received truck categories:', response.data);
-      return response.data;
+      const response = await api.get<TruckCategoryWithTypes[]>('/reference/truck-categories');
+      console.log('Raw truck categories response:', response.data);
+      
+      // Check if the response is in the expected format with categoryId
+      if (Array.isArray(response.data) && response.data.length > 0 && 'categoryId' in response.data[0]) {
+        // Map the enhanced response to the expected TruckCategory format
+        const categories = response.data.map(item => ({
+          id: item.categoryId,
+          categoryName: item.categoryName,
+          isActive: item.isActive
+        }));
+        console.log('Mapped truck categories:', categories);
+        return categories;
+      } 
+      
+      // If the response is already in the expected format
+      if (Array.isArray(response.data) && response.data.length > 0 && 'id' in response.data[0]) {
+        console.log('Categories already in expected format');
+        return response.data;
+      }
+      
+      console.error('Unexpected truck categories response format:', response.data);
+      return [];
     } catch (error) {
       console.error('Error fetching truck categories:', error);
       throw error;
@@ -149,4 +181,4 @@ class ReferenceService {
   }
 }
 
-export default new ReferenceService(); 
+export default new ReferenceService();

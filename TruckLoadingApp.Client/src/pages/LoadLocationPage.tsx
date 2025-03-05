@@ -3,9 +3,16 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import MapSelector from '../components/maps/MapSelector';
 import shipperService, { Load } from '../services/shipper.service';
+import { FaMapMarkerAlt, FaExchangeAlt } from 'react-icons/fa';
 
 interface LocationState {
   load: Load;
+}
+
+interface LocationData {
+  lat: number;
+  lng: number;
+  address?: string;
 }
 
 const LoadLocationPage: React.FC = () => {
@@ -19,17 +26,21 @@ const LoadLocationPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Location states
-  const [pickupLocation, setPickupLocation] = useState<{
-    lat: number;
-    lng: number;
-    address: string;
-  } | null>(null);
+  const [pickupLocation, setPickupLocation] = useState<LocationData | null>(
+    load?.pickupLatitude && load?.pickupLongitude ? {
+      lat: load.pickupLatitude,
+      lng: load.pickupLongitude,
+      address: load.pickupAddress || ''
+    } : null
+  );
   
-  const [deliveryLocation, setDeliveryLocation] = useState<{
-    lat: number;
-    lng: number;
-    address: string;
-  } | null>(null);
+  const [deliveryLocation, setDeliveryLocation] = useState<LocationData | null>(
+    load?.deliveryLatitude && load?.deliveryLongitude ? {
+      lat: load.deliveryLatitude,
+      lng: load.deliveryLongitude,
+      address: load.deliveryAddress || ''
+    } : null
+  );
 
   useEffect(() => {
     const fetchLoad = async () => {
@@ -39,6 +50,23 @@ const LoadLocationPage: React.FC = () => {
         setLoading(true);
         const loadData = await shipperService.getLoadById(parseInt(id));
         setLoad(loadData);
+        
+        // Initialize locations if available in the load
+        if (loadData.pickupLatitude && loadData.pickupLongitude) {
+          setPickupLocation({
+            lat: loadData.pickupLatitude,
+            lng: loadData.pickupLongitude,
+            address: loadData.pickupAddress || ''
+          });
+        }
+        
+        if (loadData.deliveryLatitude && loadData.deliveryLongitude) {
+          setDeliveryLocation({
+            lat: loadData.deliveryLatitude,
+            lng: loadData.deliveryLongitude,
+            address: loadData.deliveryAddress || ''
+          });
+        }
       } catch (err: any) {
         console.error('Error fetching load:', err);
         setError(err.message || 'Failed to load data');
@@ -52,11 +80,11 @@ const LoadLocationPage: React.FC = () => {
     }
   }, [id, state?.load]);
 
-  const handlePickupSelect = (location: { lat: number; lng: number; address: string }) => {
+  const handlePickupSelect = (location: LocationData) => {
     setPickupLocation(location);
   };
 
-  const handleDeliverySelect = (location: { lat: number; lng: number; address: string }) => {
+  const handleDeliverySelect = (location: LocationData) => {
     setDeliveryLocation(location);
   };
 
@@ -73,10 +101,10 @@ const LoadLocationPage: React.FC = () => {
         ...load,
         pickupLatitude: pickupLocation.lat,
         pickupLongitude: pickupLocation.lng,
-        pickupAddress: pickupLocation.address,
+        pickupAddress: pickupLocation.address || '',
         deliveryLatitude: deliveryLocation.lat,
         deliveryLongitude: deliveryLocation.lng,
-        deliveryAddress: deliveryLocation.address
+        deliveryAddress: deliveryLocation.address || ''
       });
 
       // Navigate to truck matching page
@@ -128,45 +156,50 @@ const LoadLocationPage: React.FC = () => {
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-6">
             <h1 className="text-2xl font-semibold text-gray-900">Select Locations</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Step 2: Specify pickup and delivery locations for your load
+            <p className="mt-1 text-sm text-gray-500 flex items-center">
+              <span className="mr-2">Step 2: Specify pickup and delivery locations for your load</span>
+              {pickupLocation && deliveryLocation && (
+                <span className="inline-flex items-center bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  <FaExchangeAlt className="mr-1" /> Route Visualized
+                </span>
+              )}
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Pickup Location</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <FaMapMarkerAlt className="text-red-500 mr-2" />
+                Pickup Location
+              </h2>
               <MapSelector
                 onLocationSelect={handlePickupSelect}
-                initialLocation={pickupLocation}
-                placeholder="Enter pickup location"
+                initialLocation={pickupLocation || undefined}
+                placeholder="Search pickup location"
+                secondLocation={deliveryLocation || undefined}
+                isPickup={true}
               />
-              {pickupLocation && (
-                <div className="mt-2 text-sm text-gray-500">
-                  Selected: {pickupLocation.address}
-                </div>
-              )}
             </div>
 
             <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Delivery Location</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <FaMapMarkerAlt className="text-blue-500 mr-2" />
+                Delivery Location
+              </h2>
               <MapSelector
                 onLocationSelect={handleDeliverySelect}
-                initialLocation={deliveryLocation}
-                placeholder="Enter delivery location"
+                initialLocation={deliveryLocation || undefined}
+                placeholder="Search delivery location"
+                secondLocation={pickupLocation || undefined}
+                isPickup={false}
               />
-              {deliveryLocation && (
-                <div className="mt-2 text-sm text-gray-500">
-                  Selected: {deliveryLocation.address}
-                </div>
-              )}
             </div>
           </div>
 
           <div className="mt-8 flex justify-end space-x-4">
             <button
               type="button"
-              onClick={() => navigate(`/loads/${load.id}/edit`)}
+              onClick={() => navigate(`/loads/edit/${load.id}`)}
               className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Back
@@ -188,4 +221,4 @@ const LoadLocationPage: React.FC = () => {
   );
 };
 
-export default LoadLocationPage; 
+export default LoadLocationPage;

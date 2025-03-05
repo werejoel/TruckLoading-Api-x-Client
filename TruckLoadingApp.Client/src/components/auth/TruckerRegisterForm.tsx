@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import referenceService from '../../services/reference.service';
 import { TruckOwnerType } from '../../types/auth.types';
+import { TruckType } from '../../types/truck.types';
 
 // Validation schema
 const TruckerRegisterSchema = Yup.object().shape({
@@ -30,12 +32,28 @@ const TruckerRegisterSchema = Yup.object().shape({
   experience: Yup.number()
     .min(0, 'Experience must be a positive number')
     .nullable(),
+  truckTypeId: Yup.number()
+    .required('Truck type is required'),
 });
 
 const TruckerRegisterForm: React.FC = () => {
   const { registerTrucker } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [truckTypes, setTruckTypes] = useState<TruckType[]>([]);
+
+  useEffect(() => {
+    const fetchTruckTypes = async () => {
+      try {
+        const types = await referenceService.getTruckTypes();
+        setTruckTypes(types);
+      } catch (error) {
+        console.error('Error fetching truck types:', error);
+        setError('Failed to load truck types. Please try again.');
+      }
+    };
+    fetchTruckTypes();
+  }, []);
 
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
@@ -98,6 +116,7 @@ const TruckerRegisterForm: React.FC = () => {
           licenseNumber: '',
           licenseExpiryDate: '',
           experience: '',
+          truckTypeId: '',
         }}
         validationSchema={TruckerRegisterSchema}
         onSubmit={handleSubmit}
@@ -214,7 +233,27 @@ const TruckerRegisterForm: React.FC = () => {
               />
               <ErrorMessage name="experience" component="div" className="mt-1 text-sm text-red-600" />
             </div>
-            
+
+            <div>
+              <label htmlFor="truckTypeId" className="block text-sm font-medium text-gray-700">
+                Truck Type
+              </label>
+              <Field
+                as="select"
+                name="truckTypeId"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="">Select a truck type</option>
+                {truckTypes.map(type => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                    {type.description && ` - ${type.description}`}
+                  </option>
+                ))}
+              </Field>
+              <ErrorMessage name="truckTypeId" component="div" className="mt-1 text-sm text-red-600" />
+            </div>
+
             <div>
               <button
                 type="submit"
