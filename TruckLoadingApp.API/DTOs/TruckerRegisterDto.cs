@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using TruckLoadingApp.API.Enums;
+using TruckLoadingApp.Domain.Enums;
 
 namespace TruckLoadingApp.API.DTOs
 {
@@ -27,5 +27,18 @@ namespace TruckLoadingApp.API.DTOs
         
         [Required]
         public TruckOwnerType TruckOwnerType { get; set; }
+        
+        // Driver-specific fields
+        [Required]
+        [StringLength(50)]
+        public string LicenseNumber { get; set; }
+        
+        [Required]
+        public DateTime LicenseExpiryDate { get; set; }
+        
+        public int? Experience { get; set; }
+        
+        [Phone]
+        public string PhoneNumber { get; set; }
     }
 } 

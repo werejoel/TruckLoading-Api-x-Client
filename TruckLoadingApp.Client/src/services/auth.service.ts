@@ -4,7 +4,9 @@ import {
   ShipperRegisterRequest, 
   TruckerRegisterRequest, 
   CompanyRegisterRequest,
-  AuthResponse
+  AuthResponse,
+  TruckOwnerType,
+  UserType
 } from '../types/auth.types';
 
 class AuthService {
@@ -100,20 +102,40 @@ class AuthService {
     return response.data;
   }
   
-  // Register trucker method
-  async registerTrucker(registerData: TruckerRegisterRequest): Promise<AuthResponse> {
-    // Map frontend field names to backend field names
-    const backendData = {
-      Username: registerData.email,
-      Password: registerData.password,
-      ConfirmPassword: registerData.confirmPassword || registerData.password, // Use confirmPassword if provided
-      FirstName: registerData.firstName,
-      LastName: registerData.lastName,
+  // Register trucker method with enhanced driver information
+  async registerTrucker(
+    email: string,
+    password: string,
+    confirmPassword: string,
+    firstName: string,
+    lastName: string,
+    truckOwnerType: TruckOwnerType,
+    licenseNumber: string,
+    licenseExpiryDate: string | Date,
+    experience?: number | null
+  ): Promise<AuthResponse> {
+    // Convert TruckOwnerType enum to numeric value
+    // Individual = 1, Company = 2
+    const truckOwnerTypeValue = truckOwnerType === TruckOwnerType.Individual ? 1 : 2;
+    
+    // Create the DTO object matching what the API expects
+    const data = {
+      Username: email,
+      Password: password,
+      ConfirmPassword: confirmPassword,
+      FirstName: firstName,
+      LastName: lastName,
       UserType: 2, // Numeric value for Trucker (2)
-      TruckOwnerType: registerData.truckOwnerType === 'Individual' ? 1 : 2 // Convert to numeric value
+      TruckOwnerType: truckOwnerTypeValue,
+      LicenseNumber: licenseNumber,
+      LicenseExpiryDate: licenseExpiryDate,
+      Experience: experience
     };
     
-    const response = await api.post<AuthResponse>('/auth/register/trucker', backendData);
+    // Log the request data for debugging
+    console.log('Sending trucker registration data:', data);
+    
+    const response = await api.post<AuthResponse>('/auth/register/trucker', data);
     
     if (response.data.token) {
       // Store tokens in localStorage
@@ -207,4 +229,4 @@ class AuthService {
   }
 }
 
-export default new AuthService(); 
+export default new AuthService();

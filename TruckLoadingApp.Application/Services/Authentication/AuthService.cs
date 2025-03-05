@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using TruckLoadingApp.Application.Services.Authentication.Interfaces;
+using TruckLoadingApp.Application.Services.DriverManagement.Interfaces;
 using TruckLoadingApp.Domain.DTOs;
 using TruckLoadingApp.Domain.Enums;
 using TruckLoadingApp.Domain.Models;
@@ -21,19 +22,22 @@ namespace TruckLoadingApp.Application.Services.Authentication
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly IDriverService _driverService;
 
         public AuthService(
             UserManager<User> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration,
             ILogger<AuthService> logger,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            IDriverService driverService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
             _logger = logger;
             _context = context;
+            _driverService = driverService;
         }
 
         public async Task<AuthResponseDto?> RegisterAsync(RegisterDto registerDto)
@@ -160,11 +164,43 @@ namespace TruckLoadingApp.Application.Services.Authentication
                     LastName = registerDto.LastName,
                     UserType = UserType.Trucker,
                     TruckOwnerType = registerDto.TruckOwnerType,
+                    PhoneNumber = registerDto.PhoneNumber,
                     CreatedDate = DateTime.UtcNow,
                     SecurityStamp = Guid.NewGuid().ToString()
                 };
 
-                return await RegisterUserAsync(user, registerDto.Password, UserType.Trucker.ToString());
+                // Register the user account
+                var authResponse = await RegisterUserAsync(user, registerDto.Password, UserType.Trucker.ToString());
+                
+                if (authResponse != null && authResponse.Success)
+                {
+                    try
+                    {
+                        // Create driver record with license details
+                        var driver = new Driver
+                        {
+                            UserId = authResponse.UserId,
+                            FirstName = registerDto.FirstName, 
+                            LastName = registerDto.LastName,
+                            LicenseNumber = registerDto.LicenseNumber,
+                            LicenseExpiryDate = registerDto.LicenseExpiryDate,
+                            Experience = registerDto.Experience,
+                            PhoneNumber = registerDto.PhoneNumber,
+                            IsAvailable = true,
+                            CreatedDate = DateTime.UtcNow
+                        };
+                        
+                        await _driverService.CreateDriverAsync(driver);
+                        _logger.LogInformation("Driver record created for trucker {Email}", registerDto.Username);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error creating driver record for trucker {Email}", registerDto.Username);
+                        // Continue anyway, as the user account was created successfully
+                    }
+                }
+
+                return authResponse;
             }
             catch (Exception ex)
             {
@@ -504,4 +540,4 @@ namespace TruckLoadingApp.Application.Services.Authentication
 
         #endregion
     }
-} 
+}

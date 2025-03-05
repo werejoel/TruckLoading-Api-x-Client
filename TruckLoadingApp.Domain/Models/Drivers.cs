@@ -59,5 +59,6 @@ namespace TruckLoadingApp.Domain.Models
         public virtual ICollection<DriverSchedule> Schedules { get; set; } = new List<DriverSchedule>();
         public virtual ICollection<DriverRestPeriod> RestPeriods { get; set; } = new List<DriverRestPeriod>();
         public virtual DriverRoutePreference? RoutePreferences { get; set; }
+        public string? PhoneNumber { get; set; }
     }
 }

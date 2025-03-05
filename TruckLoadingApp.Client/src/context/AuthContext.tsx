@@ -10,7 +10,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   registerShipper: (email: string, password: string, confirmPassword: string, firstName: string, lastName: string) => Promise<void>;
-  registerTrucker: (email: string, password: string, confirmPassword: string, firstName: string, lastName: string, truckOwnerType: string) => Promise<void>;
+  registerTrucker: (email: string, password: string, confirmPassword: string, firstName: string, lastName: string, truckOwnerType: string, licenseNumber: string, licenseExpiryDate: string | Date, experience?: number | null, phoneNumber?: string) => Promise<void>;
   registerCompany: (email: string, password: string, confirmPassword: string, firstName: string, lastName: string, companyName: string, companyAddress: string, companyRegistrationNumber: string, companyContact: string) => Promise<void>;
   hasRole: (role: string) => boolean;
 }
@@ -174,20 +174,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     password: string, 
     confirmPassword: string,
     firstName: string, 
-    lastName: string, 
-    truckOwnerType: string
+    lastName: string,
+    truckOwnerType: string,
+    licenseNumber: string,
+    licenseExpiryDate: string | Date,
+    experience?: number | null,
+    phoneNumber?: string
   ) => {
     try {
       setLoading(true);
-      const response = await authService.registerTrucker({
+      const response = await authService.registerTrucker(
         email,
         password,
         confirmPassword,
         firstName,
         lastName,
-        userType: UserType.Trucker,
-        truckOwnerType: truckOwnerType as any
-      });
+        truckOwnerType as TruckOwnerType,
+        licenseNumber,
+        licenseExpiryDate,
+        experience,
+        phoneNumber
+      );
       
       if (response.success) {
         setIsAuthenticated(true);
@@ -199,7 +206,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           firstName,
           lastName,
           userType: UserType.Trucker,
-          truckOwnerType: truckOwnerType as any,
+          truckOwnerType: truckOwnerType as TruckOwnerType,
           roles: response.roles,
           createdDate: new Date().toISOString()
         };
@@ -286,4 +293,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export default AuthContext; 
+export default AuthContext;

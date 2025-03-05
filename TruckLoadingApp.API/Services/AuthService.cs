@@ -1,18 +1,13 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using TruckLoadingApp.API.DTOs;
 using TruckLoadingApp.API.Models;
-using TruckLoadingApp.API.Enums;
+using TruckLoadingApp.Domain.Models;
+using TruckLoadingApp.Infrastructure.Data;
 
 namespace TruckLoadingApp.API.Services
 {
@@ -22,17 +17,20 @@ namespace TruckLoadingApp.API.Services
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
+        private readonly ApplicationDbContext _context;
 
         public AuthService(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration,
-            ILogger<AuthService> logger)
+            ILogger<AuthService> logger,
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
             _logger = logger;
+            _context = context;
         }
 
         public async Task<AuthResponseDto> RegisterUserAsync(RegisterDto registerDto)
@@ -139,7 +137,8 @@ namespace TruckLoadingApp.API.Services
                     Email = registerDto.Username,
                     FirstName = registerDto.FirstName,
                     LastName = registerDto.LastName,
-                    TruckOwnerType = registerDto.TruckOwnerType,
+                    TruckOwnerType = (Enums.TruckOwnerType?)registerDto.TruckOwnerType,
+                    PhoneNumber = registerDto.PhoneNumber,
                     CreatedDate = DateTime.UtcNow
                 };
 
@@ -162,6 +161,33 @@ namespace TruckLoadingApp.API.Services
                     await _roleManager.CreateAsync(new IdentityRole(roleName));
                 }
                 await _userManager.AddToRoleAsync(user, roleName);
+
+                // Create driver record for the trucker
+                try
+                {
+                    var driver = new Driver
+                    {
+                        UserId = user.Id,
+                        FirstName = registerDto.FirstName,
+                        LastName = registerDto.LastName,
+                        LicenseNumber = registerDto.LicenseNumber,
+                        LicenseExpiryDate = registerDto.LicenseExpiryDate,
+                        Experience = registerDto.Experience,
+                        PhoneNumber = registerDto.PhoneNumber,
+                        IsAvailable = true,
+                        CreatedDate = DateTime.UtcNow
+                    };
+
+                    _context.Drivers.Add(driver);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Created driver record for trucker {Username}", registerDto.Username);
+                }
+                catch (Exception driverEx)
+                {
+                    _logger.LogError(driverEx, "Error creating driver record for trucker {Username}", registerDto.Username);
+                    // Continue with registration even if driver creation fails
+                    // We can handle this separately or provide a way to create the driver record later
+                }
 
                 // Generate tokens
                 var token = await GenerateJwtTokenAsync(user);

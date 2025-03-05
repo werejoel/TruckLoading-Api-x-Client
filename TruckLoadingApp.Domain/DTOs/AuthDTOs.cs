@@ -59,6 +59,18 @@ namespace TruckLoadingApp.Domain.DTOs
 
         [Required]
         public TruckOwnerType TruckOwnerType { get; set; }
+        
+        [Required]
+        [MaxLength(50)]
+        public string LicenseNumber { get; set; } = string.Empty;
+        
+        [Required]
+        public DateTime LicenseExpiryDate { get; set; }
+        
+        public int? Experience { get; set; }
+        
+        [Phone]
+        public string? PhoneNumber { get; set; }
     }
 
     // Company-specific registration DTO
@@ -128,4 +140,4 @@ namespace TruckLoadingApp.Domain.DTOs
         [Required]
         public string UserId { get; set; } = string.Empty;
     }
-} 
+}
