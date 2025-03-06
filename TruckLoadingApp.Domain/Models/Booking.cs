@@ -69,6 +69,8 @@ namespace TruckLoadingApp.Domain.Models
         public DateTime? DeliveryDateActual { get; set; }
 
         public string? CancellationReason { get; set; }
+        [MaxLength(50)]
+        public string? PricingType { get; set; }
     }
     public enum BookingStatusEnum
     {
@@ -76,7 +78,9 @@ namespace TruckLoadingApp.Domain.Models
         Confirmed = 2,
         InProgress = 3,
         Completed = 4,
-        Cancelled = 5
+        Cancelled = 5,
+        Accepted = 6,
+        InTransit = 7
     }
 }
 

@@ -13,6 +13,7 @@ const TruckRegistrationForm: React.FC<TruckRegistrationFormProps> = ({ onSuccess
   const [truckTypes, setTruckTypes] = useState<TruckType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null); // New state for API errors
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
 
@@ -25,6 +26,7 @@ const TruckRegistrationForm: React.FC<TruckRegistrationFormProps> = ({ onSuccess
     try {
       console.log('Starting to load truck categories and types...');
       setLoadingError(null);
+      setApiError(null); // Clear any previous API errors
       setIsLoading(true);
       
       // Load truck types directly without categories
@@ -69,6 +71,7 @@ const TruckRegistrationForm: React.FC<TruckRegistrationFormProps> = ({ onSuccess
 
   const onSubmit = async (data: TruckRegistrationRequest) => {
     setIsLoading(true);
+    setApiError(null); // Clear any previous API errors
     try {
       // Format dates properly before sending to API
       const formattedData = {
@@ -101,6 +104,8 @@ const TruckRegistrationForm: React.FC<TruckRegistrationFormProps> = ({ onSuccess
         }
       }
       
+      // Set the API error message to display in the form
+      setApiError(errorMessage);
       toast.error(errorMessage);
       
       // Add detailed error to debug info if debug is enabled
@@ -125,6 +130,14 @@ const TruckRegistrationForm: React.FC<TruckRegistrationFormProps> = ({ onSuccess
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* API Error Message */}
+      {apiError && (
+        <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+          <p className="font-bold">Error:</p>
+          <p>{apiError}</p>
+        </div>
+      )}
+      
       {/* Debug Information */}
       {loadingError && (
         <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">

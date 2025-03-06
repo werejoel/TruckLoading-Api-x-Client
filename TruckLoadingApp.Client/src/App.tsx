@@ -23,6 +23,9 @@ import LoadLocationPage from './pages/LoadLocationPage';
 import MatchingTrucksPage from './pages/MatchingTrucksPage';
 import BookTruckPage from './pages/BookTruckPage';
 import RegisterTruckPage from './pages/trucker/RegisterTruckPage';
+import AvailableLoadsPage from './pages/AvailableLoadsPage';
+import MyDeliveriesPage from './pages/MyDeliveriesPage';
+import DeliveryDetailPage from './pages/DeliveryDetailPage';
 // import SearchTrucksPage from './pages/SearchTrucksPage';
 // import BookingsPage from './pages/BookingsPage';
 // import MyTrucksPage from './pages/MyTrucksPage';
@@ -73,6 +76,10 @@ function App() {
           <Route element={<ProtectedRoute requiredRole="Trucker" />}>
             <Route path="/trucker/dashboard" element={<TruckerDashboardPage />} />
             <Route path="/trucker/register-truck" element={<RegisterTruckPage />} />
+            <Route path="/available-loads" element={<AvailableLoadsPage />} />
+            <Route path="/my-deliveries" element={<MyDeliveriesPage />} />
+            <Route path="/my-deliveries/:id" element={<DeliveryDetailPage />} />
+            <Route path="/trucker/trucks/:id" element={<TruckDetailPage />} />
           </Route>
           
           {/* Company routes */}

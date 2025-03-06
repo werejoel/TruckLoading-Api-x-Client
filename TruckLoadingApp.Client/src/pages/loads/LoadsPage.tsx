@@ -276,7 +276,7 @@ const LoadsPage: React.FC = () => {
                                 Delete
                               </button>
                               <Link
-                                to={`/loads/${load.id}/matching-trucks`}
+                                to={`/loads/${load.id}${load.pickupLatitude && load.pickupLongitude && load.deliveryLatitude && load.deliveryLongitude ? '/matching-trucks' : '/select-location'}`}
                                 onClick={(e) => e.stopPropagation()}
                                 className="px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center"
                               >

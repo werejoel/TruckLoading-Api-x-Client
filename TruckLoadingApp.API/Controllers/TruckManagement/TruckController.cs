@@ -10,7 +10,7 @@ using TruckLoadingApp.Domain.Models;
 namespace TruckLoadingApp.API.Controllers.TruckManagement
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/truck-management")]
     [Authorize]
     public class TruckController : ControllerBase
     {

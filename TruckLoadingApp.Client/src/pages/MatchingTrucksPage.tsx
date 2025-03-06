@@ -26,9 +26,18 @@ const MatchingTrucksPage: React.FC = () => {
       try {
         setLoading(true);
         // If we don't have the load data from state, fetch it
-        if (!load) {
-          const loadData = await shipperService.getLoadById(parseInt(id));
+        let loadData = load;
+        if (!loadData) {
+          loadData = await shipperService.getLoadById(parseInt(id));
           setLoad(loadData);
+        }
+        
+        // Check if load has locations set
+        if (!loadData.pickupLatitude || !loadData.pickupLongitude || 
+            !loadData.deliveryLatitude || !loadData.deliveryLongitude) {
+          // Redirect to location selection page if locations are not set
+          navigate(`/loads/${id}/select-location`, { state: { load: loadData } });
+          return;
         }
         
         // Fetch matching trucks
@@ -43,7 +52,7 @@ const MatchingTrucksPage: React.FC = () => {
     };
 
     fetchData();
-  }, [id, load, maxDistance]);
+  }, [id, load, maxDistance, navigate]);
 
   const handleDistanceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value);
@@ -176,7 +185,7 @@ const MatchingTrucksPage: React.FC = () => {
           <div className="mt-8 flex justify-end space-x-4">
             <button
               type="button"
-              onClick={() => navigate(`/loads/${load.id}/select-location`)}
+              onClick={() => navigate(-1)}
               className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Back
