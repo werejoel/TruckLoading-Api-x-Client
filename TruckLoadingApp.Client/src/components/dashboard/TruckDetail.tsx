@@ -100,7 +100,7 @@ const TruckDetail: React.FC = () => {
             {truck.numberPlate}
           </h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            {truck.truckType}
+            {typeof truck.truckType === 'string' ? truck.truckType : 'Unknown Type'}
           </p>
         </div>
         
@@ -112,15 +112,21 @@ const TruckDetail: React.FC = () => {
             </div>
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Truck Type</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{truck.truckType}</dd>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                {typeof truck.truckType === 'string' ? truck.truckType : 'Unknown Type'}
+              </dd>
             </div>
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Load Capacity Weight</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{truck.loadCapacityWeight.toLocaleString()} kg</dd>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                {truck.loadCapacityWeight ? truck.loadCapacityWeight.toLocaleString() : 'N/A'} kg
+              </dd>
             </div>
             <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Load Capacity Volume</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{truck.loadCapacityVolume.toLocaleString()} m³</dd>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                {truck.loadCapacityVolume ? truck.loadCapacityVolume.toLocaleString() : 'N/A'} m³
+              </dd>
             </div>
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Dimensions (H×W×L)</dt>

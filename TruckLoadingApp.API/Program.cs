@@ -131,19 +131,12 @@ builder.Services.AddAuthentication(options =>
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazorClient", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:5094",
-            "https://localhost:5049",
-            "http://localhost:7094",
-            "http://localhost:5174",
-            "http://localhost:5173",
-            "https://localhost:7021"
-        )
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
@@ -276,7 +269,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Middleware Configuration
-app.UseCors("AllowBlazorClient");
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter(); // Add rate limiting middleware

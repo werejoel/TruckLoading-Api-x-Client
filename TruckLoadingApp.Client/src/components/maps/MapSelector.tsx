@@ -109,7 +109,7 @@ const AutocompleteSuggestions: React.FC<{
   if (!visible) return null;
   
   return (
-    <div className="absolute z-50 w-full bg-white mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
+    <div className="absolute z-[1000] w-full bg-white mt-1 rounded-md shadow-lg max-h-60 overflow-y-auto">
       {loading ? (
         <div className="p-4 text-center text-gray-500 flex items-center justify-center">
           <FaSpinner className="animate-spin h-5 w-5 mr-2" />
@@ -157,44 +157,52 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   // Get user's location on component mount
   useEffect(() => {
     const getUserLocation = () => {
-      setIsLocatingUser(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const userLoc = { lat: latitude, lng: longitude };
-          setUserLocation(userLoc);
-          
-          // If no initial location is provided, use the user's location
-          if (!initialLocation && !selectedLocation) {
-            // Get the address for the user's location
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-              .then(response => response.json())
-              .then(data => {
-                const locationWithAddress = {
-                  ...userLoc,
-                  address: data.display_name
-                };
-                // Only set as selected if no location was previously selected
-                if (!selectedLocation) {
-                  setSelectedLocation(locationWithAddress);
-                }
-              })
-              .catch(err => console.error('Error getting address:', err))
-              .finally(() => setIsLocatingUser(false));
-          } else {
+      // This will trigger the browser's location permission prompt
+      if (navigator.geolocation) {
+        setIsLocatingUser(true);
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const userLoc = { lat: latitude, lng: longitude };
+            setUserLocation(userLoc);
+            
+            // If this is a pickup location selector and no location is selected yet,
+            // ask the user if they want to use their current location
+            if (isPickup && !selectedLocation && !initialLocation) {
+              const confirmUse = window.confirm('Do you want to use your current location as the pickup location?');
+              if (confirmUse) {
+                // Get address for the location
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                  .then(response => response.json())
+                  .then(data => {
+                    const locationWithAddress = {
+                      ...userLoc,
+                      address: data.display_name
+                    };
+                    setSelectedLocation(locationWithAddress);
+                    onLocationSelect(locationWithAddress);
+                    setSearchQuery(data.display_name);
+                  })
+                  .catch(err => {
+                    console.error('Error getting address:', err);
+                    setSelectedLocation(userLoc);
+                    onLocationSelect(userLoc);
+                  });
+              }
+            }
             setIsLocatingUser(false);
-          }
-        },
-        (error) => {
-          console.error('Error getting user location:', error);
-          setIsLocatingUser(false);
-        },
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-      );
+          },
+          (error) => {
+            console.error('Error getting user location:', error);
+            setIsLocatingUser(false);
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      }
     };
 
     getUserLocation();
-  }, [initialLocation, selectedLocation]);
+  }, [isPickup, initialLocation, selectedLocation, onLocationSelect]);
 
   useEffect(() => {
     if (initialLocation) {
@@ -277,9 +285,17 @@ const MapSelector: React.FC<MapSelectorProps> = ({
       lng: parseFloat(suggestion.lon),
       address: suggestion.display_name
     };
+    
+    // Set the selected location
     setSelectedLocation(location);
+    
+    // Notify parent component about the selection
     onLocationSelect(location);
+    
+    // Update the search query with the selected address
     setSearchQuery(suggestion.display_name);
+    
+    // Hide the suggestions dropdown
     setShowSuggestions(false);
   };
 
@@ -314,6 +330,16 @@ const MapSelector: React.FC<MapSelectorProps> = ({
   const handleUseMyLocation = () => {
     if (userLocation) {
       setIsLocatingUser(true);
+      
+      // Show confirmation dialog before using location as pickup
+      if (isPickup) {
+        const confirmUse = window.confirm('Do you want to use your current location as the pickup location?');
+        if (!confirmUse) {
+          setIsLocatingUser(false);
+          return;
+        }
+      }
+      
       fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLocation.lat}&lon=${userLocation.lng}`)
         .then(response => response.json())
         .then(data => {
