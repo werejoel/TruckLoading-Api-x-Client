@@ -10,6 +10,29 @@ const api: AxiosInstance = axios.create({
   },
 });
 
+// Flag to track if a token refresh is in progress
+let isRefreshing = false;
+// Queue of requests to retry after token refresh
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+// Function to add request to queue
+const subscribeTokenRefresh = (callback: (token: string) => void) => {
+  refreshSubscribers.push(callback);
+};
+
+// Function to process queue with new token
+const onTokenRefreshed = (newToken: string) => {
+  refreshSubscribers.forEach(callback => callback(newToken));
+  refreshSubscribers = [];
+};
+
+// Function to reject all requests in queue
+const onRefreshError = (error: any) => {
+  refreshSubscribers.forEach(callback => callback(''));
+  refreshSubscribers = [];
+  return Promise.reject(error);
+};
+
 // Add a request interceptor to include the auth token in requests
 api.interceptors.request.use(
   (config) => {
@@ -30,39 +53,97 @@ api.interceptors.response.use(
     
     // If the error is 401 (Unauthorized) and we haven't already tried to refresh the token
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Mark this request as retried
       originalRequest._retry = true;
       
-      try {
-        // Try to refresh the token
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          // No refresh token available, redirect to login
-          window.location.href = '/login';
-          return Promise.reject(error);
-        }
+      // If we're not already refreshing the token
+      if (!isRefreshing) {
+        isRefreshing = true;
         
-        const response = await axios.post(`${baseURL}/auth/refresh-token`, {
-          token: localStorage.getItem('token'),
-          refreshToken
+        try {
+          // Try to refresh the token
+          const refreshToken = localStorage.getItem('refreshToken');
+          const token = localStorage.getItem('token');
+          
+          if (!refreshToken || !token) {
+            // No refresh token available, redirect to login
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            
+            // Only redirect if we're not already on the login page
+            if (!window.location.pathname.includes('/login')) {
+              window.location.href = '/login';
+            }
+            return Promise.reject(error);
+          }
+          
+          console.log('Attempting to refresh token with:', { 
+            tokenPrefix: token.substring(0, 10) + '...', 
+            refreshTokenPrefix: refreshToken.substring(0, 10) + '...' 
+          });
+          
+          const response = await axios.post(`${baseURL}/auth/refresh-token`, {
+            token,
+            refreshToken
+          });
+          
+          if (response.data && response.data.token && response.data.refreshToken) {
+            console.log('Token refresh successful, storing new tokens');
+            
+            // Save the new tokens
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('refreshToken', response.data.refreshToken);
+            
+            // Update the Authorization header for the original request
+            originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
+            
+            // Process any queued requests with the new token
+            onTokenRefreshed(response.data.token);
+            
+            // Reset refreshing flag
+            isRefreshing = false;
+            
+            // Retry the original request
+            return api(originalRequest);
+          } else {
+            console.error('Token refresh response did not contain new tokens:', response.data);
+            throw new Error('Invalid token refresh response');
+          }
+        } catch (refreshError) {
+          console.error('Error refreshing token:', refreshError);
+          
+          // If refresh token fails, redirect to login
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          
+          // Process any queued requests with error
+          onRefreshError(refreshError);
+          
+          // Reset refreshing flag
+          isRefreshing = false;
+          
+          // Only redirect if we're not already on the login page
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+          }
+          return Promise.reject(refreshError);
+        }
+      } else {
+        // If we're already refreshing, add this request to the queue
+        return new Promise(resolve => {
+          subscribeTokenRefresh((token: string) => {
+            if (token) {
+              // If we got a new token, update the header and retry
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(api(originalRequest));
+            } else {
+              // If refresh failed, reject
+              resolve(Promise.reject(error));
+            }
+          });
         });
-        
-        if (response.data) {
-          // Save the new tokens
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('refreshToken', response.data.refreshToken);
-          
-          // Update the Authorization header
-          originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
-          
-          // Retry the original request
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        // If refresh token fails, redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
       }
     }
     

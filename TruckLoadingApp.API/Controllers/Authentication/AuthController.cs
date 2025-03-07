@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using TruckLoadingApp.Application.Services.Authentication.Interfaces;
 using TruckLoadingApp.Domain.DTOs;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TruckLoadingApp.API.Controllers.Authentication
 {
@@ -21,6 +22,16 @@ namespace TruckLoadingApp.API.Controllers.Authentication
         {
             _authService = authService;
             _logger = logger;
+        }
+
+        [HttpGet("verify")]
+        [Authorize]
+        public IActionResult VerifyToken()
+        {
+            return Ok(new { 
+                Success = true,
+                Message = "Token is valid" 
+            });
         }
 
         [HttpPost("login")]
@@ -358,4 +369,4 @@ namespace TruckLoadingApp.API.Controllers.Authentication
             }
         }
     }
-} 
+}

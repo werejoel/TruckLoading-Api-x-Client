@@ -12,9 +12,22 @@ import {
 class AuthService {
   // Login method
   async login(loginData: LoginRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/login', loginData);
-    
-    if (response.data.token) {
+    try {
+      console.log('Logging in user:', loginData.username);
+      const response = await api.post<AuthResponse>('/auth/login', loginData);
+      
+      if (!response.data.success) {
+        console.error('Login failed:', response.data.message);
+        throw new Error(response.data.message || 'Login failed');
+      }
+      
+      if (!response.data.token || !response.data.refreshToken) {
+        console.error('Login response missing tokens');
+        throw new Error('Invalid login response: missing tokens');
+      }
+      
+      console.log('Login successful, storing tokens and user data');
+      
       // Parse the JWT token to get additional claims
       const tokenParts = response.data.token.split('.');
       let userData: any = {
@@ -53,9 +66,12 @@ class AuthService {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('refreshToken', response.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(userData));
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error in login method:', error);
+      throw error;
     }
-    
-    return response.data;
   }
   
   // Logout method
@@ -224,8 +240,66 @@ class AuthService {
 
   // Verify if the current token is valid
   async verifyToken(): Promise<boolean> {
-    await api.get('/auth/verify');
-    return true;
+    try {
+      console.log('Verifying token...');
+      // Use a simple endpoint that requires authentication
+      await api.get('/auth/verify');
+      console.log('Token verification successful');
+      return true;
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      throw error;
+    }
+  }
+
+  // Refresh token method
+  async refreshToken(token: string, refreshToken: string): Promise<AuthResponse> {
+    try {
+      console.log('Auth service refreshToken called with token and refresh token');
+      
+      // Use axios directly to avoid circular dependencies with api.ts
+      const axios = (await import('axios')).default;
+      const baseURL = 'https://localhost:7021/api';
+      
+      const response = await axios.post<AuthResponse>(`${baseURL}/auth/refresh-token`, {
+        token,
+        refreshToken
+      });
+      
+      console.log('Refresh token response received:', { 
+        success: response.data.success,
+        hasToken: !!response.data.token,
+        hasRefreshToken: !!response.data.refreshToken
+      });
+      
+      if (response.data.token && response.data.refreshToken) {
+        console.log('Storing new tokens from refresh response');
+        
+        // Store new tokens in localStorage
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+        
+        // Update user data if needed
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          try {
+            const userData = JSON.parse(userStr);
+            // You might want to update user data here if the API returns updated user info
+            localStorage.setItem('user', JSON.stringify(userData));
+          } catch (parseError) {
+            console.error('Error parsing user data during token refresh:', parseError);
+          }
+        }
+      } else {
+        console.error('Refresh token response missing tokens:', response.data);
+        throw new Error('Invalid refresh token response');
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error in auth service refreshToken:', error);
+      throw error;
+    }
   }
 }
 

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -16,20 +16,33 @@ const LoginSchema = Yup.object().shape({
 const LoginForm: React.FC = () => {
   const { login, hasRole } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState<string | null>(null);
+  const [returnUrl, setReturnUrl] = useState<string | null>(null);
+
+  // Extract returnUrl from query parameters
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const returnUrlParam = queryParams.get('returnUrl');
+    if (returnUrlParam) {
+      setReturnUrl(decodeURIComponent(returnUrlParam));
+    }
+  }, [location]);
 
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
       setError(null);
       await login(values.username, values.password);
       
-      // Redirect based on user role
-      if (hasRole('Company')) {
+      // Redirect to returnUrl if available, otherwise redirect based on user role
+      if (returnUrl) {
+        navigate(returnUrl);
+      } else if (hasRole('Company')) {
         navigate('/company/dashboard');
       } else if (hasRole('Trucker')) {
-        navigate('/dashboard'); // Can be changed to a trucker-specific dashboard later
+        navigate('/trucker/dashboard');
       } else if (hasRole('Shipper')) {
-        navigate('/dashboard'); // Can be changed to a shipper-specific dashboard later
+        navigate('/shipper/dashboard');
       } else {
         navigate('/dashboard'); // Default fallback
       }

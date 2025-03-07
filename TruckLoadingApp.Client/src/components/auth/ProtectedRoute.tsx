@@ -1,5 +1,5 @@
-import React, { ReactNode } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import React, { ReactNode, useEffect } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 interface ProtectedRouteProps {
@@ -8,16 +8,24 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRole, children }) => {
-  const { isAuthenticated, loading, hasRole } = useAuth();
+  const { isAuthenticated, loading, hasRole, error } = useAuth();
+  const location = useLocation();
 
   // Show loading indicator while checking authentication
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p className="ml-2">Verifying your session...</p>
+      </div>
+    );
   }
 
-  // If not authenticated, redirect to login
+  // If not authenticated, redirect to login with the return URL
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    // Save the current location to redirect back after login
+    const returnPath = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?returnUrl=${returnPath}`} replace />;
   }
 
   // If a specific role is required, check if the user has it

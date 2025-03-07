@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import authService from '../services/auth.service';
-import { User, UserType } from '../types/auth.types';
+import { User, UserType, TruckOwnerType } from '../types/auth.types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -35,6 +35,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Function to refresh the token
+  const refreshAuthToken = async () => {
+    if (!isAuthenticated) return;
+    
+    const token = localStorage.getItem('token');
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    if (!token || !refreshToken) return;
+    
+    try {
+      console.log('Periodic token refresh initiated');
+      const response = await authService.refreshToken(token, refreshToken);
+      
+      if (!response.success) {
+        console.error('Periodic token refresh failed:', response.message);
+        // Don't log out the user here, let the interceptor handle it
+      } else {
+        console.log('Periodic token refresh successful, tokens updated');
+        
+        // Update user data if needed
+        if (user && response.userId === user.id) {
+          // Keep the existing user data but update any fields that might have changed
+          setUser(prevUser => {
+            if (!prevUser) return null;
+            return {
+              ...prevUser,
+              roles: response.roles || prevUser.roles
+            };
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error during periodic token refresh:', error);
+      // Don't log out the user here, let the interceptor handle it
+    }
+  };
+
+  // Set up periodic token refresh (every 10 minutes)
+  useEffect(() => {
+    if (isAuthenticated) {
+      const refreshInterval = setInterval(refreshAuthToken, 10 * 60 * 1000); // 10 minutes
+      
+      return () => {
+        clearInterval(refreshInterval);
+      };
+    }
+  }, [isAuthenticated]);
+
   // Check if user is already logged in on component mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -53,18 +101,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const userData = JSON.parse(userStr);
               console.log('Parsed user data:', userData);
               
-              // Verify token is still valid
+              // Get tokens from localStorage
               const token = localStorage.getItem('token');
-              if (token) {
+              const refreshToken = localStorage.getItem('refreshToken');
+              
+              if (!token || !refreshToken) {
+                console.error('Missing tokens in localStorage');
+                localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('user');
+                setIsAuthenticated(false);
+                setUser(null);
+                setError('Session expired. Please login again.');
+                return;
+              }
+              
+              try {
+                // First try to verify the token without refreshing
+                console.log('Verifying token...');
+                await authService.verifyToken();
+                console.log('Token is valid');
+                setUser(userData as User);
+                setIsAuthenticated(true);
+                setError(null);
+              } catch (verifyError) {
+                console.error('Token verification failed:', verifyError instanceof Error ? verifyError.message : 'Unknown error');
+                
+                // If verification fails, try to refresh the token
                 try {
-                  // Make a test request to verify token
-                  await authService.verifyToken();
-                  setUser(userData as User);
-                  setIsAuthenticated(true);
-                  setError(null);
-                } catch (error: unknown) {
-                  console.error('Token verification failed:', error instanceof Error ? error.message : 'Unknown error');
-                  // Token is invalid, clear everything
+                  console.log('Attempting to refresh token...');
+                  const response = await authService.refreshToken(token, refreshToken);
+                  
+                  if (response.success) {
+                    console.log('Token refreshed successfully');
+                    // Update user data if needed
+                    setUser(userData as User);
+                    setIsAuthenticated(true);
+                    setError(null);
+                  } else {
+                    console.error('Token refresh failed:', response.message);
+                    // If refresh failed, clear everything
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('refreshToken');
+                    localStorage.removeItem('user');
+                    setIsAuthenticated(false);
+                    setUser(null);
+                    setError('Session expired. Please login again.');
+                  }
+                } catch (refreshError) {
+                  console.error('Error refreshing token:', refreshError instanceof Error ? refreshError.message : 'Unknown error');
+                  // If refresh token fails, clear everything
                   localStorage.removeItem('token');
                   localStorage.removeItem('refreshToken');
                   localStorage.removeItem('user');
@@ -73,11 +159,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   setError('Session expired. Please login again.');
                 }
               }
-            } catch (error: unknown) {
-              console.error('Error parsing user data:', error instanceof Error ? error.message : 'Unknown error');
+            } catch (parseError) {
+              console.error('Error parsing user data:', parseError instanceof Error ? parseError.message : 'Unknown error');
+              localStorage.removeItem('user');
               setError('Error loading user data. Please login again.');
             }
+          } else {
+            console.error('No user data in localStorage');
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            setIsAuthenticated(false);
+            setUser(null);
           }
+        } else {
+          console.log('User is not logged in');
         }
       } catch (error: unknown) {
         console.error('Error during auth check:', error instanceof Error ? error.message : 'Unknown error');
@@ -137,6 +232,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const response = await authService.registerShipper({
+        username: email,
         email,
         password,
         confirmPassword,
@@ -192,8 +288,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         truckOwnerType as TruckOwnerType,
         licenseNumber,
         licenseExpiryDate,
-        experience,
-        phoneNumber
+        experience
       );
       
       if (response.success) {
@@ -235,6 +330,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       const response = await authService.registerCompany({
+        username: email,
         email,
         password,
         confirmPassword,
@@ -257,9 +353,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           firstName,
           lastName,
           userType: UserType.Company,
-          companyName,
-          companyRegistrationNumber,
           roles: response.roles,
+          companyName,
           createdDate: new Date().toISOString()
         };
         setUser(userData);
@@ -274,23 +369,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Check if user has a specific role
   const hasRole = (role: string) => {
-    return authService.hasRole(role);
+    if (!user || !user.roles) return false;
+    return user.roles.includes(role);
   };
 
-  const value = {
-    isAuthenticated,
-    user,
-    loading,
-    error,
-    login,
-    logout,
-    registerShipper,
-    registerTrucker,
-    registerCompany,
-    hasRole
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        user,
+        loading,
+        error,
+        login,
+        logout,
+        registerShipper,
+        registerTrucker,
+        registerCompany,
+        hasRole
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export default AuthContext;
