@@ -4,6 +4,10 @@ using TruckLoadingApp.Application.Services.Interfaces;
 using TruckLoadingApp.Domain.Models;
 using TruckLoadingApp.Infrastructure.Data;
 using TruckLoadingApp.Domain.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace TruckLoadingApp.Application.Services
 {
@@ -11,6 +15,10 @@ namespace TruckLoadingApp.Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<TruckRouteService> _logger;
+
+        // Constants for time window constraints
+        private const double DefaultAverageSpeedKmh = 60.0;
+        private const int MinimumRequiredBufferMinutes = 30; // 30 minutes buffer time between stops
 
         public TruckRouteService(ApplicationDbContext context, ILogger<TruckRouteService> logger)
         {
@@ -219,7 +227,7 @@ namespace TruckLoadingApp.Application.Services
                     .ThenInclude(t => t.TruckType)
                 .Include(r => r.Truck)
                     .ThenInclude(t => t.AssignedDriver)
-                .Include(r => r.Waypoints)
+                .Include(r => r.Waypoints.OrderBy(w => w.SequenceNumber))
                 .Where(r => r.IsActive && 
                        r.StartDate <= load.PickupDate && 
                        (r.EndDate == null || r.EndDate >= load.DeliveryDate))
@@ -268,8 +276,8 @@ namespace TruckLoadingApp.Application.Services
                     continue;
                 }
 
-                // Check if the truck's route passes near the load's pickup and delivery locations
-                bool isRouteMatching = IsRouteMatchingLoad(route, load, maxDistanceKm);
+                // Check if the truck's route matches the load spatially and temporally
+                var (isRouteMatching, timeCompatibilityScore) = IsRouteMatchingLoad(route, load, maxDistanceKm);
                 
                 if (isRouteMatching)
                 {
@@ -279,42 +287,251 @@ namespace TruckLoadingApp.Application.Services
                         load.PickupLatitude ?? 0, 
                         load.PickupLongitude ?? 0);
                     
+                    // Store the time compatibility score as a property on the truck for sorting
+                    truck.RouteDistance = timeCompatibilityScore;
+                    
                     matchingTrucks.Add(truck);
                     processedTruckIds.Add(truck.Id);
                 }
             }
 
-            // Sort by distance to pickup
-            return matchingTrucks.OrderBy(t => t.DistanceToPickup);
+            // Sort by time compatibility score first, then by distance to pickup
+            return matchingTrucks
+                .OrderByDescending(t => t.RouteDistance)  // Higher score is better
+                .ThenBy(t => t.DistanceToPickup);         // Lower distance is better
         }
 
-        private bool IsRouteMatchingLoad(TruckRoute route, Load load, double maxDistanceKm)
+        private (bool isMatching, decimal timeCompatibilityScore) IsRouteMatchingLoad(TruckRoute route, Load load, double maxDistanceKm)
         {
             if (route.Waypoints == null || !route.Waypoints.Any() || 
                 !load.PickupLatitude.HasValue || !load.PickupLongitude.HasValue ||
                 !load.DeliveryLatitude.HasValue || !load.DeliveryLongitude.HasValue)
             {
-                return false;
+                return (false, 0);
             }
 
-            // Check if any waypoint is close to the pickup location
-            bool isNearPickup = route.Waypoints.Any(w => 
-                CalculateDistance(
-                    (double)w.Latitude, 
-                    (double)w.Longitude, 
-                    (double)load.PickupLatitude.Value, 
-                    (double)load.PickupLongitude.Value) <= maxDistanceKm);
+            // Order waypoints by sequence number to ensure proper time window analysis
+            var orderedWaypoints = route.Waypoints.OrderBy(w => w.SequenceNumber).ToList();
 
-            // Check if any waypoint is close to the delivery location
-            bool isNearDelivery = route.Waypoints.Any(w => 
-                CalculateDistance(
-                    (double)w.Latitude, 
-                    (double)w.Longitude, 
-                    (double)load.DeliveryLatitude.Value, 
-                    (double)load.DeliveryLongitude.Value) <= maxDistanceKm);
+            // Find closest waypoint to pickup location
+            var closestToPickup = FindClosestWaypoint(
+                orderedWaypoints, 
+                (double)load.PickupLatitude.Value, 
+                (double)load.PickupLongitude.Value,
+                maxDistanceKm);
 
-            // Check if the route passes through both pickup and delivery areas
-            return isNearPickup && isNearDelivery;
+            // Find closest waypoint to delivery location
+            var closestToDelivery = FindClosestWaypoint(
+                orderedWaypoints, 
+                (double)load.DeliveryLatitude.Value, 
+                (double)load.DeliveryLongitude.Value,
+                maxDistanceKm);
+
+            if (closestToPickup == null || closestToDelivery == null)
+            {
+                return (false, 0);
+            }
+
+            // Check if the closest waypoint to pickup is before the closest waypoint to delivery in the route sequence
+            if (closestToPickup.SequenceNumber > closestToDelivery.SequenceNumber)
+            {
+                _logger.LogInformation($"Route {route.Id} doesn't match load {load.Id} due to waypoint sequence mismatch");
+                return (false, 0);
+            }
+
+            // Check time windows compatibility
+            var timeCompatibility = CheckTimeWindowCompatibility(
+                orderedWaypoints,
+                closestToPickup,
+                closestToDelivery,
+                load.PickupDate,
+                load.DeliveryDate,
+                (double)load.PickupLatitude.Value,
+                (double)load.PickupLongitude.Value,
+                (double)load.DeliveryLatitude.Value,
+                (double)load.DeliveryLongitude.Value);
+
+            return timeCompatibility;
+        }
+
+        private TruckRouteWaypoint? FindClosestWaypoint(
+            IEnumerable<TruckRouteWaypoint> waypoints, 
+            double latitude, 
+            double longitude,
+            double maxDistance)
+        {
+            TruckRouteWaypoint? closestWaypoint = null;
+            double minDistance = maxDistance;
+
+            foreach (var waypoint in waypoints)
+            {
+                double distance = CalculateDistance(
+                    (double)waypoint.Latitude, 
+                    (double)waypoint.Longitude, 
+                    latitude, 
+                    longitude);
+
+                if (distance <= minDistance)
+                {
+                    minDistance = distance;
+                    closestWaypoint = waypoint;
+                }
+            }
+
+            return closestWaypoint;
+        }
+
+        private (bool isCompatible, decimal compatibilityScore) CheckTimeWindowCompatibility(
+            List<TruckRouteWaypoint> orderedWaypoints,
+            TruckRouteWaypoint pickupWaypoint,
+            TruckRouteWaypoint deliveryWaypoint,
+            DateTime requiredPickupTime,
+            DateTime requiredDeliveryTime,
+            double pickupLat,
+            double pickupLon,
+            double deliveryLat,
+            double deliveryLon)
+        {
+            // If waypoints don't have estimated times, they're not suitable for time window matching
+            if (!pickupWaypoint.EstimatedArrivalTime.HasValue || !deliveryWaypoint.EstimatedArrivalTime.HasValue)
+            {
+                _logger.LogInformation("Waypoints don't have estimated arrival times for proper time window matching");
+                return (false, 0);
+            }
+
+            // Calculate estimated time needed for pickup detour
+            int pickupIndex = orderedWaypoints.FindIndex(w => w.Id == pickupWaypoint.Id);
+            if (pickupIndex < 0 || pickupIndex >= orderedWaypoints.Count - 1)
+            {
+                return (false, 0);
+            }
+
+            var nextWaypoint = orderedWaypoints[pickupIndex + 1];
+            
+            // Calculate detour time to include pickup location
+            var originalTime = EstimateTimeToTravel(
+                (double)pickupWaypoint.Latitude, 
+                (double)pickupWaypoint.Longitude,
+                (double)nextWaypoint.Latitude, 
+                (double)nextWaypoint.Longitude);
+            
+            var detourTime = EstimateTimeToTravel(
+                (double)pickupWaypoint.Latitude, 
+                (double)pickupWaypoint.Longitude,
+                pickupLat, 
+                pickupLon) +
+                EstimateTimeToTravel(
+                    pickupLat, 
+                    pickupLon, 
+                    (double)nextWaypoint.Latitude, 
+                    (double)nextWaypoint.Longitude);
+
+            // Additional time needed for the detour (minutes)
+            var additionalPickupTime = (detourTime - originalTime).TotalMinutes;
+            
+            // Add loading/unloading time (assume 30 minutes)
+            additionalPickupTime += 30;
+            
+            // Calculate the same for delivery
+            int deliveryIndex = orderedWaypoints.FindIndex(w => w.Id == deliveryWaypoint.Id);
+            if (deliveryIndex <= pickupIndex || deliveryIndex >= orderedWaypoints.Count - 1)
+            {
+                return (false, 0);
+            }
+            
+            var nextDeliveryWaypoint = orderedWaypoints[deliveryIndex + 1];
+            
+            var originalDeliveryTime = EstimateTimeToTravel(
+                (double)deliveryWaypoint.Latitude, 
+                (double)deliveryWaypoint.Longitude,
+                (double)nextDeliveryWaypoint.Latitude, 
+                (double)nextDeliveryWaypoint.Longitude);
+            
+            var deliveryDetourTime = EstimateTimeToTravel(
+                (double)deliveryWaypoint.Latitude, 
+                (double)deliveryWaypoint.Longitude,
+                deliveryLat, 
+                deliveryLon) +
+                EstimateTimeToTravel(
+                    deliveryLat, 
+                    deliveryLon, 
+                    (double)nextDeliveryWaypoint.Latitude, 
+                    (double)nextDeliveryWaypoint.Longitude);
+
+            // Additional time needed for the detour (minutes)
+            var additionalDeliveryTime = (deliveryDetourTime - originalDeliveryTime).TotalMinutes + 30; // 30 mins for unloading
+            
+            // Check if there's enough buffer time in the truck's schedule
+            DateTime estimatedPickupTime = pickupWaypoint.EstimatedArrivalTime.Value;
+            DateTime estimatedDeliveryTime = deliveryWaypoint.EstimatedArrivalTime.Value;
+            
+            // Next waypoint's estimated time
+            DateTime nextWaypointTime = nextWaypoint.EstimatedArrivalTime.GetValueOrDefault(
+                estimatedPickupTime.AddMinutes(
+                    EstimateTimeToTravel(
+                        (double)pickupWaypoint.Latitude, 
+                        (double)pickupWaypoint.Longitude,
+                        (double)nextWaypoint.Latitude, 
+                        (double)nextWaypoint.Longitude).TotalMinutes));
+            
+            // Calculate available buffer for pickup
+            double pickupBufferMinutes = (nextWaypointTime - estimatedPickupTime).TotalMinutes - 
+                (pickupWaypoint.StopDurationMinutes ?? 0);
+            
+            // Check if there's enough time for the pickup detour
+            if (pickupBufferMinutes < additionalPickupTime + MinimumRequiredBufferMinutes)
+            {
+                _logger.LogInformation($"Not enough buffer time for pickup: available {pickupBufferMinutes}min, needed {additionalPickupTime + MinimumRequiredBufferMinutes}min");
+                return (false, 0);
+            }
+            
+            // Next delivery waypoint's estimated time
+            DateTime nextDeliveryWaypointTime = nextDeliveryWaypoint.EstimatedArrivalTime.GetValueOrDefault(
+                estimatedDeliveryTime.AddMinutes(
+                    EstimateTimeToTravel(
+                        (double)deliveryWaypoint.Latitude, 
+                        (double)deliveryWaypoint.Longitude,
+                        (double)nextDeliveryWaypoint.Latitude, 
+                        (double)nextDeliveryWaypoint.Longitude).TotalMinutes));
+            
+            // Calculate available buffer for delivery
+            double deliveryBufferMinutes = (nextDeliveryWaypointTime - estimatedDeliveryTime).TotalMinutes -
+                (deliveryWaypoint.StopDurationMinutes ?? 0);
+            
+            // Check if there's enough time for the delivery detour
+            if (deliveryBufferMinutes < additionalDeliveryTime + MinimumRequiredBufferMinutes)
+            {
+                _logger.LogInformation($"Not enough buffer time for delivery: available {deliveryBufferMinutes}min, needed {additionalDeliveryTime + MinimumRequiredBufferMinutes}min");
+                return (false, 0);
+            }
+            
+            // Check if the required pickup and delivery times fit within the truck's schedule
+            if (requiredPickupTime < estimatedPickupTime || requiredDeliveryTime > estimatedDeliveryTime)
+            {
+                _logger.LogInformation($"Required pickup/delivery times don't fit within truck's schedule");
+                return (false, 0);
+            }
+            
+            // Calculate a compatibility score (0-100) based on how well the times match and buffer availability
+            decimal pickupScore = (decimal)Math.Min(100, (pickupBufferMinutes / (additionalPickupTime + MinimumRequiredBufferMinutes)) * 100);
+            decimal deliveryScore = (decimal)Math.Min(100, (deliveryBufferMinutes / (additionalDeliveryTime + MinimumRequiredBufferMinutes)) * 100);
+            
+            // Combine both scores with weights (pickup being slightly more important)
+            decimal combinedScore = (pickupScore * 0.6M) + (deliveryScore * 0.4M);
+            
+            _logger.LogInformation($"Route is compatible with time windows. Score: {combinedScore}");
+            return (true, combinedScore);
+        }
+
+        private TimeSpan EstimateTimeToTravel(double lat1, double lon1, double lat2, double lon2)
+        {
+            // Calculate distance between points
+            double distanceKm = CalculateDistance(lat1, lon1, lat2, lon2);
+            
+            // Calculate time based on average speed
+            double hours = distanceKm / DefaultAverageSpeedKmh;
+            
+            return TimeSpan.FromHours(hours);
         }
 
         private decimal CalculateMinimumDistanceToWaypoint(
@@ -366,4 +583,4 @@ namespace TruckLoadingApp.Application.Services
             return degrees * Math.PI / 180.0;
         }
     }
-} 
+}

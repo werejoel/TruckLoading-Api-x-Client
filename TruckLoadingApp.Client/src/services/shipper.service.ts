@@ -110,6 +110,12 @@ export interface TruckSearchResponse {
 export interface BookingCreateRequest {
   loadId: number;
   truckId: number;
+  proposedPrice?: number;
+  currency?: string;
+  notes?: string;
+  expressBooking?: boolean;
+  requestedPickupDate?: Date;
+  requestedDeliveryDate?: Date;
 }
 
 export interface Booking {
@@ -159,6 +165,27 @@ export interface TruckMatchResponse {
   estimatedTimeToPickup?: string;
 }
 
+export interface BookingHistory {
+  id: number;
+  bookingId: number;
+  timestamp: Date;
+  changeDescription: string;
+  changedBy: string;
+  previousStatus?: string;
+  newStatus?: string;
+  details?: Record<string, any>;
+}
+
+export interface BookingAuditRecord {
+  id: number;
+  bookingId: number;
+  field: string;
+  oldValue?: string;
+  newValue?: string;
+  changedBy: string;
+  changedAt: Date;
+}
+
 class ShipperService {
   // Load management
   async createLoad(loadData: LoadCreateRequest): Promise<Load> {
@@ -191,8 +218,8 @@ class ShipperService {
   }
 
   // Booking management
-  async createBookingRequest(loadId: number, truckId: number): Promise<Booking> {
-    const response = await api.post<Booking>('/shipper/bookings', { loadId, truckId });
+  async createBookingRequest(request: BookingCreateRequest): Promise<Booking> {
+    const response = await api.post<Booking>('/shipper/bookings', request);
     return response.data;
   }
 
@@ -226,6 +253,17 @@ class ShipperService {
     const response = await api.get<TruckMatchResponse[]>(`/load/${loadId}/matching-trucks?maxDistanceKm=${maxDistanceKm}`);
     return response.data;
   }
+
+  // Booking history and audit trail
+  async getBookingHistory(bookingId: number): Promise<BookingHistory[]> {
+    const response = await api.get<BookingHistory[]>(`/shipper/bookings/${bookingId}/history`);
+    return response.data;
+  }
+  
+  async getBookingAuditTrail(bookingId: number): Promise<BookingAuditRecord[]> {
+    const response = await api.get<BookingAuditRecord[]>(`/shipper/bookings/${bookingId}/audit`);
+    return response.data;
+  }
 }
 
-export default new ShipperService(); 
+export default new ShipperService();
