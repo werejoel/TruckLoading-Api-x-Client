@@ -117,5 +117,7 @@ We welcome contributions to improve TruckLoading-Api-x-Client. To contribute:
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/OLEMUKAN/TruckLoading-Api-x-Client?labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit%20Reviews)
+
 ## Contact
 For any questions or feedback, please open an issue on the repository or contact the project owner at [OLEMUKAN](https://github.com/OLEMUKAN).
