@@ -281,7 +281,7 @@ const Landing: FC = () => {
           >
             <h2 className="text-base  font-semibold tracking-wide uppercase" style={{color:"#002244"}}>Features</h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Better way to manage your fleet
+              Better Way To Handle Non Revenue Miles
             </p>
             <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
               Our comprehensive solution provides everything you need to optimize your truck loading operations.
