@@ -20,7 +20,7 @@
   animation: float 3s ease-in-out infinite;
 }
 
-/* Add smooth scrolling to the whole page */
+/*smooth scrolling to the whole page */
 html {
   scroll-behavior: smooth;
 }
@@ -74,7 +74,7 @@ html {
     justify-content: center;
   }
   
-  /* Adjust the content container */
+  /*content container */
   .hero-content {
     z-index: 10;
     width: 100%;
@@ -83,7 +83,7 @@ html {
     padding: 0 1rem;
     
   }
-  /* Your existing gradient text styles */
+  /*gradient text styles */
   .primary-gradient-text {
     background-image: linear-gradient(to right, #002244, #002244);
     -webkit-background-clip: text;
@@ -140,7 +140,11 @@ html {
   }
   
   .primary-gradient-text {
-    background-image: linear-gradient(45deg, var(--primary-dark), var(--primary), var(--primary-light), var(--primary));
+    background-image: linear-gradient(45deg, 
+    var(--primary-dark), 
+    var(--primary), 
+    var(--primary-light), 
+    var(--primary));
   }
   
   .secondary-gradient-text {
@@ -283,7 +287,10 @@ html {
   /* CTA section animations */
   .cta-gradient {
     background-size: 200% auto;
-    background-image: linear-gradient(135deg, var(--primary), var(--primary-dark), #1e40af, var(--primary-dark));
+    background-image: linear-gradient(135deg, 
+    var(--primary), 
+    var(--primary-dark), 
+    #1e40af, var(--primary-dark));
     animation: gradientShift 10s ease infinite;
   }
   
