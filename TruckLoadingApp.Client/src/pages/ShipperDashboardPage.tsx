@@ -1,72 +1,168 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/layout/Navbar';
-import { FaTruck, FaPlus, FaList } from 'react-icons/fa';
+import "../css/ShiperDashboard.css";
+import { 
+  FaTruck, 
+  FaPlus, 
+  FaList, 
+  FaHome, 
+  FaUser, 
+  FaChartLine, 
+  FaCog, 
+  FaSignOutAlt,
+  FaBars,
+  FaShippingFast
+} from 'react-icons/fa';
 
 const ShipperDashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  // Function to get user initials for avatar
+  const getUserInitials = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
+    }
+    return 'SH';
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome, {user?.firstName || 'Shipper'}!</h1>
-          <p className="mt-2 text-gray-600">Manage your loads and shipments from your dashboard.</p>
-        </div>
+    <div className="app-container">
+      {/* Mobile Menu Toggle */}
+      <button className="menu-toggle" onClick={toggleSidebar}>
+        <FaBars />
+      </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Create New Load Card */}
-          <Link
-            to="/loads/create"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200"
-          >
-            <div className="flex items-center mb-4">
-              <FaPlus className="text-blue-500 text-2xl mr-3" />
-              <h2 className="text-xl font-semibold text-gray-900">Create New Load</h2>
-            </div>
-            <p className="text-gray-600">Create a new load request for transportation.</p>
-          </Link>
-
-          {/* View Loads Card */}
-          <Link
-            to="/loads"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200"
-          >
-            <div className="flex items-center mb-4">
-              <FaList className="text-green-500 text-2xl mr-3" />
-              <h2 className="text-xl font-semibold text-gray-900">View Loads</h2>
-            </div>
-            <p className="text-gray-600">View and manage your existing loads.</p>
-          </Link>
-
-          {/* Find Trucks Card */}
-          <Link
-            to="/available-trucks"
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200"
-          >
-            <div className="flex items-center mb-4">
-              <FaTruck className="text-orange-500 text-2xl mr-3" />
-              <h2 className="text-xl font-semibold text-gray-900">Find Trucks</h2>
-            </div>
-            <p className="text-gray-600">Search for available trucks for your loads.</p>
+      {/* Sidebar */}
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <Link to="/dashboard" className="sidebar-logo">
+            <FaShippingFast />
+            <span>ShipperPro</span>
           </Link>
         </div>
 
-        {/* Recent Activity Section */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="divide-y divide-gray-200">
-              {/* We'll add actual activity items later */}
-              <p className="p-4 text-gray-600 text-center">No recent activity to display.</p>
+        <nav className="sidebar-menu">
+          <Link to="/dashboard" className={`menu-item ${location.pathname === '/dashboard' ? 'active' : ''}`}>
+            <FaHome />
+            <span>Dashboard</span>
+          </Link>
+          <Link to="/loads/create" className={`menu-item ${location.pathname === '/loads/create' ? 'active' : ''}`}>
+            <FaPlus />
+            <span>Create Load</span>
+          </Link>
+          <Link to="/loads" className={`menu-item ${location.pathname === '/loads' ? 'active' : ''}`}>
+            <FaList />
+            <span>My Loads</span>
+          </Link>
+          <Link to="/available-trucks" className={`menu-item ${location.pathname === '/available-trucks' ? 'active' : ''}`}>
+            <FaTruck />
+            <span>Find Trucks</span>
+          </Link>
+          <Link to="/analytics" className={`menu-item ${location.pathname === '/analytics' ? 'active' : ''}`}>
+            <FaChartLine />
+            <span>Analytics</span>
+          </Link>
+          <Link to="/profile" className={`menu-item ${location.pathname === '/profile' ? 'active' : ''}`}>
+            <FaUser />
+            <span>Profile</span>
+          </Link>
+          <Link to="/settings" className={`menu-item ${location.pathname === '/settings' ? 'active' : ''}`}>
+            <FaCog />
+            <span>Settings</span>
+          </Link>
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="user-info">
+            <div className="user-avatar">
+              {getUserInitials()}
+            </div>
+            <div className="user-details">
+              <div className="user-name">{user?.firstName} {user?.lastName || 'Shipper'}</div>
+              <div className="user-role">Shipper Account</div>
+            </div>
+          </div>
+          <Link to="/logout" className="menu-item" style={{ marginTop: '1rem' }}>
+            <FaSignOutAlt />
+            <span>Logout</span>
+          </Link>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="main-content">
+        <div className="content-wrapper">
+          <div className="page-header">
+            <h1 className="page-title">Welcome, {user?.firstName || 'Shipper'}!</h1>
+            <p className="page-description">Manage your loads and shipments from your dashboard.</p>
+          </div>
+
+          <div className="dashboard-grid">
+            {/* Create New Load Card */}
+            <Link
+              to="/loads/create"
+              className="dashboard-card create-card"
+            >
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaPlus />
+                </div>
+                <h2 className="card-title">Create New Load</h2>
+              </div>
+              <p className="card-description">Create a new load request for transportation.</p>
+            </Link>
+
+            {/* View Loads Card */}
+            <Link
+              to="/loads"
+              className="dashboard-card view-card"
+            >
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaList />
+                </div>
+                <h2 className="card-title">View Loads</h2>
+              </div>
+              <p className="card-description">View and manage your existing loads.</p>
+            </Link>
+
+            {/* Find Trucks Card */}
+            <Link
+              to="/available-trucks"
+              className="dashboard-card find-card"
+            >
+              <div className="card-header">
+                <div className="card-icon">
+                  <FaTruck />
+                </div>
+                <h2 className="card-title">Find Trucks</h2>
+              </div>
+              <p className="card-description">Search for available trucks for your loads.</p>
+            </Link>
+          </div>
+
+          {/* Recent Activity Section */}
+          <div className="activity-section">
+            <div className="activity-header">
+              <h2 className="activity-title">Recent Activity</h2>
+            </div>
+            <div className="activity-card">
+              <div className="activity-empty">
+                <p>No recent activity to display.</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
 
-export default ShipperDashboardPage; 
+export default ShipperDashboardPage;
