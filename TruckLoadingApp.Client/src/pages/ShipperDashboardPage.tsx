@@ -44,7 +44,7 @@ const ShipperDashboardPage: React.FC = () => {
         <div className="sidebar-header">
           <Link to="/dashboard" className="sidebar-logo">
             <FaShippingFast />
-            <span>ShipperPro</span>
+            <span>Shipper</span>
           </Link>
         </div>
 
