@@ -22,8 +22,8 @@
     margin: 0;
     padding: 0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background-color:white;
-    color: #333;
+    background-color: var(--gray-100);
+    color: var(--gray-800);
     overflow-x: hidden;
   }
   
@@ -31,7 +31,6 @@
   .app-container {
     display: flex;
     min-height: 100vh;
-    background-color: #111825;
   }
   
   /* Sidebar */
@@ -48,6 +47,10 @@
     display: flex;
     flex-direction: column;
     box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .sidebar.closed {
+    transform: translateX(-100%);
   }
   
   .sidebar-header {
@@ -88,7 +91,6 @@
     margin: 0.25rem 0;
     border-left: 3px solid transparent;
   }
-  
   .menu-item:hover {
     background-color: rgba(255, 255, 255, 0.05);
     color: white;
@@ -154,6 +156,10 @@
     background-color: var(--gray-100);
   }
   
+  .main-content.expanded {
+    margin-left: 0;
+  }
+  
   .content-wrapper {
     padding: 2rem;
     max-width: 1400px;
@@ -175,165 +181,83 @@
     color: var(--gray-600);
   }
   
-  /* Dashboard Cards */
-  .dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-  }
-  
-  .dashboard-card {
-    background-color: white;
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s;
-    text-decoration: none;
-    color: inherit;
-    cursor: pointer;
-    overflow: hidden;
-    position: relative;
-    border: 1px solid var(--gray-200);
-  }
-  
-  .dashboard-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
-  }
-  
-  .dashboard-card:after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 6px;
-    height: 100%;
-    background-color: var(--primary-color);
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  
-  .dashboard-card:hover:after {
-    opacity: 1;
-  }
-  
-  .dashboard-card.create-card:after {
-    background-color: var(--primary-color);
-  }
-  
-  .dashboard-card.view-card:after {
-    background-color: var(--success-color);
-  }
-  
-  .dashboard-card.find-card:after {
-    background-color: var(--warning-color);
-  }
-  
-  .card-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-  
-  .card-icon {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-    font-size: 1.5rem;
-  }
-  
-  .create-card .card-icon {
-    background-color: rgba(59, 130, 246, 0.1);
-    color: var(--primary-color);
-  }
-  
-  .view-card .card-icon {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: var(--success-color);
-  }
-  
-  .find-card .card-icon {
-    background-color: rgba(245, 158, 11, 0.1);
-    color: var(--warning-color);
-  }
-  
-  .card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--gray-900);
-  }
-  
-  .card-description {
-    color: var(--gray-600);
-  }
-  
-  /* Activity Section */
-  .activity-section {
-    margin-top: 3rem;
-  }
-  
-  .activity-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-  
-  .activity-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--gray-900);
-  }
-  
+  /* Activity Cards */
   .activity-card {
     background-color: white;
     border-radius: 0.5rem;
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--gray-200);
+    animation: fadeIn 0.3s ease-in-out;
   }
   
-  .activity-list {
-    border-collapse: collapse;
-    width: 100%;
+  /* Card Icons */
+  .card-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1rem;
   }
   
-  .activity-list th {
-    text-align: left;
-    padding: 1rem;
-    font-weight: 600;
-    color: var(--gray-700);
-    background-color: var(--gray-50);
+  .create-card .card-icon,
+  .card-icon.create-card {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color);
   }
   
-  .activity-list td {
-    padding: 1rem;
-    border-top: 1px solid var(--gray-200);
+  .view-card .card-icon,
+  .card-icon.view-card {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
   }
   
-  .activity-empty {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--gray-600);
+  .find-card .card-icon,
+  .card-icon.find-card {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning-color);
   }
   
-  .activity-empty svg {
-    font-size: 3rem;
-    color: var(--gray-300);
-    margin-bottom: 1rem;
+  /* Hover card effect */
+  .hover-card {
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  
+  .hover-card:hover {
+    border-left: 3px solid var(--primary-color);
+  }
+  
+  /* Mobile menu toggle */
+  .menu-toggle {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
   
   /* Responsive */
-  @media (max-width: 1024px) {
-    .dashboard-grid {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    }
-  }
-  
   @media (max-width: 768px) {
     .sidebar {
       transform: translateX(-100%);
@@ -348,34 +272,10 @@
     }
     
     .menu-toggle {
-      display: block;
-      position: fixed;
-      top: 1rem;
-      left: 1rem;
-      z-index: 100;
-      background-color: var(--primary-color);
-      color: white;
-      border: none;
-      border-radius: 0.25rem;
-      width: 2.5rem;
-      height: 2.5rem;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
     }
     
     .content-wrapper {
-      padding: 2rem 1rem;
+      padding: 1rem;
     }
-  }
-  
-  /* Animations */
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  .dashboard-card, .activity-card {
-    animation: fadeIn 0.3s ease-in-out;
   }

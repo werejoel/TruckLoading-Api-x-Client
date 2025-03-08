@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import "../css/ShiperDashboard.css";
 import { 
@@ -16,8 +16,9 @@ import {
 } from 'react-icons/fa';
 
 const ShipperDashboardPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
@@ -30,6 +31,17 @@ const ShipperDashboardPage: React.FC = () => {
       return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
     }
     return 'SH';
+  };
+
+  // Handle logout function
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (
@@ -89,10 +101,10 @@ const ShipperDashboardPage: React.FC = () => {
               <div className="user-role">Shipper Account</div>
             </div>
           </div>
-          <Link to="/logout" className="menu-item" style={{ marginTop: '1rem' }}>
+          <a href="#" onClick={handleLogout} className="menu-item" style={{ marginTop: '1rem' }}>
             <FaSignOutAlt />
             <span>Logout</span>
-          </Link>
+          </a>
         </div>
       </aside>
 
@@ -100,8 +112,8 @@ const ShipperDashboardPage: React.FC = () => {
       <main className="main-content">
         <div className="content-wrapper">
           <div className="page-header">
-            <h1 className="page-title">Welcome, {user?.firstName || 'Shipper'}!</h1>
-            <p className="page-description">Manage your loads and shipments from your dashboard.</p>
+            <h1 className="page-title text-center">Welcome, {user?.firstName || 'Shipper'}!</h1>
+            <p className="page-description text-center">Manage your loads and shipments from your dashboard.</p>
           </div>
 
           <div className="dashboard-grid">
