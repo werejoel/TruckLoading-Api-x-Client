@@ -1,6 +1,6 @@
 {
   "dependencies": {
     "date-fns": "^4.1.0",
-    "framer-motion": "^12.4.7"
+    "framer-motion": "^12.4.10"
   }
 }

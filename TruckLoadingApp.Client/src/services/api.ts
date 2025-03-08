@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
 // Create a base API instance
-const baseURL = 'https://localhost:7021/api'; // Updated to use HTTPS and port 7021 for local development
+const baseURL = 'http://localhost:5281/api'; // Updated to use HTTPS and port 7021 for local development
 
 const api: AxiosInstance = axios.create({
   baseURL,
