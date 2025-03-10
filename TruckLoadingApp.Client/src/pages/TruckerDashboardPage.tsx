@@ -9,6 +9,9 @@ import { Truck } from '../types/truck.types';
 import { Booking } from '../services/shipper.service';
 import { format } from 'date-fns';
 
+
+
+//Main Function 
 const TruckerDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [trucks, setTrucks] = useState<Truck[]>([]);
@@ -16,6 +19,7 @@ const TruckerDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  //useEffect Function
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -29,10 +33,12 @@ const TruckerDashboardPage: React.FC = () => {
         // Fetch bookings
         const bookingsData = await truckerService.getBookings();
         setBookings(bookingsData);
-      } catch (err: any) {
+      }
+       catch (err: any) {
         console.error('Error fetching trucker data:', err);
         setError(err.message || 'Failed to load data');
-      } finally {
+      } 
+      finally {
         setLoading(false);
       }
     };
